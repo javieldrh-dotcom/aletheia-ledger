@@ -1,0 +1,45 @@
+{
+  "benchmarkName": "aletheia-space-synthetic-vetting-benchmark",
+  "version": "1.0.0",
+  "seed": 42,
+  "generatedAt": "2026-09-04T23:57:23.676Z",
+  "description": "Curvas de luz sinteticas con verdad conocida (ground truth) para validar algoritmos de vetting de falsos positivos en transitos de exoplanetas. Generadas de forma determinista (semilla fija) para reproducibilidad total entre ejecuciones.",
+  "scenarios": [
+    {
+      "file": "koi-confirmed-clean-transit.csv",
+      "groundTruth": "confirmed_candidate",
+      "expectedVerdict": "not_false_positive",
+      "transitParameters": {
+        "periodDays": 3.5,
+        "epochBjd": 2454971.2,
+        "transitDurationHours": 3.2
+      },
+      "injectedCharacteristics": "Transito planetario limpio, forma U simetrica, profundidad 1.2%, sin ruido anomalo ni flares.",
+      "designedToTest": "Verdadero positivo -- el motor no debe descartar un candidato limpio."
+    },
+    {
+      "file": "false-positive-eclipsing-binary.csv",
+      "groundTruth": "eclipsing_binary",
+      "expectedVerdict": "false_positive",
+      "transitParameters": {
+        "periodDays": 4.1,
+        "epochBjd": 2454970.8,
+        "transitDurationHours": 4
+      },
+      "injectedCharacteristics": "Eclipse primario (3.5% profundidad) y eclipse secundario real en fase 0.5 (1.2% profundidad, cociente de temperatura estimado incluido), forma en V pronunciada.",
+      "designedToTest": "Deteccion de binaria via eclipse secundario -- prueba mas especifica que la forma V/U ambigua."
+    },
+    {
+      "file": "false-positive-flare-star.csv",
+      "groundTruth": "stellar_flares",
+      "expectedVerdict": "false_positive",
+      "transitParameters": {
+        "periodDays": 2.8,
+        "epochBjd": 2454970.5,
+        "transitDurationHours": 2.5
+      },
+      "injectedCharacteristics": "Transito subyacente limpio (0.8% profundidad) contaminado por llamaradas estelares periodicas sincronizadas con el periodo candidato.",
+      "designedToTest": "Deteccion de contaminacion por actividad estelar, no de la geometria del transito en si."
+    }
+  ]
+}

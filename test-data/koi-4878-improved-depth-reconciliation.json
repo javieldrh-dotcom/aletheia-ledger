@@ -1,0 +1,16 @@
+{
+  "reportType": "aletheia-improved-depth-reconciliation-v1",
+  "generatedAt": "2026-09-04T16:59:49.559838+00:00",
+  "target": "KOI-4878 (kplr011804437)",
+  "methodCorrection": "Aplanado por trimestre individual antes de unir (en vez de aplanado global sobre la serie completa de 4 anos), mas medicion directa de profundidad sobre la curva plegada en fase (mediana dentro vs fuera de transito), en vez de depender del ajuste interno del modelo BLS.",
+  "period_days": 449.338,
+  "midTransitBjd_relative": 242.727,
+  "publishedDepthPpm": 94.0,
+  "robustlyMeasuredDepthPpm": -37.1,
+  "measurementErrorPpm": 11.34,
+  "significanceSigma": -3.27,
+  "percentDiffFromPublished": 139.47,
+  "inTransitPointCount": 125,
+  "outOfTransitPointCount": 87104,
+  "interpretation": "Profundidad medida (-37.1 ppm) sigue sin concordar con el valor publicado (94.0 ppm) incluso tras la correccion metodologica -- discrepancia real que amerita investigacion adicional, no atribuible al aplanado global."
+}

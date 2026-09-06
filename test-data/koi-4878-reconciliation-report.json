@@ -1,0 +1,24 @@
+{
+  "reportType": "aletheia-period-reconciliation-v1",
+  "generatedAt": "2026-09-04T16:49:59.653608+00:00",
+  "target": "KOI-4878 (kplr011804437)",
+  "publishedCatalogValues": {
+    "periodDays": 449.015,
+    "periodErrorDays": 0.021,
+    "durationHours": 12.5,
+    "depthPpm": 94.0,
+    "source": "Analisis publicado de datos Kepler Q1-Q16 (Wikipedia/NASA Exoplanet Archive)"
+  },
+  "independentlyDerivedValues": {
+    "periodDays": 487.30582038802584,
+    "midTransitBjd": 242.59910905774683,
+    "durationHours": 14.399999999999999,
+    "depthPpm": 1009.6754325601952,
+    "blsMaxPower": 11435.928856490298
+  },
+  "reconciliation": {
+    "periodAgreementPercentDiff": 8.5277,
+    "depthAgreementPercentDiff": 974.1228,
+    "interpretation": "Discrepancia significativa -- senal probablemente no resuelta con claridad (esperable dada la profundidad de 94 ppm, cercana al piso de ruido fotometrico)"
+  }
+}

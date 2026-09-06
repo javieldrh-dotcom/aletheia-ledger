@@ -1,0 +1,16 @@
+{
+  "reportType": "aletheia-refined-period-reconciliation-v1",
+  "generatedAt": "2026-09-04T17:53:06.981969+00:00",
+  "target": "KOI-4878 (kplr011804437)",
+  "method": "Busqueda fina de t0 y periodo maximizando significancia estadistica del oscurecimiento medido directamente (no potencia BLS generica), restringida a una ventana estrecha alrededor del periodo publicado.",
+  "publishedPeriodDays": 449.015,
+  "refinedPeriodDays": 449.04479,
+  "refinedT0": 527.956995,
+  "measuredDepthPpm": 102.08,
+  "measurementErrorPpm": 12.1,
+  "significanceSigma": 8.43,
+  "inTransitPointCount": 129,
+  "publishedDepthPpm": 94.0,
+  "percentDiffFromPublished": 8.59,
+  "interpretation": "Tras refinar t0 y periodo maximizando significancia real, se detecto oscurecimiento de 102.1 ppm (8.43 sigma), consistente con el valor publicado de 94.0 ppm."
+}

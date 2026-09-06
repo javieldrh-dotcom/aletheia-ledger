@@ -1,0 +1,21 @@
+{
+  "reportType": "aletheia-targeted-reconciliation-v1",
+  "generatedAt": "2026-09-04T16:54:40.911234+00:00",
+  "target": "KOI-4878 (kplr011804437)",
+  "method": "Verificacion dirigida vs busqueda ciega -- se evalua la potencia BLS especificamente en el periodo publicado, en vez de asumir que el maximo global es la senal correcta.",
+  "globalBlindSearch": {
+    "maxPowerFound": 11435.928856490298,
+    "periodAtMaxPower": 487.30582038802584,
+    "note": "Senal mas fuerte en el rango 400-500 dias, pero no coincide con el candidato publicado."
+  },
+  "targetedSearchAtPublishedPeriod": {
+    "period": 449.33841170585293,
+    "power": 7907.437179365806,
+    "depthPpm": 750.3694445509583,
+    "midTransitBjd": 242.72660905774686
+  },
+  "reconciliation": {
+    "powerRatioTargetedVsGlobalMax": 0.691456,
+    "interpretation": "Hay evidencia real de una senal en el periodo publicado, mas debil que la senal dominante"
+  }
+}
