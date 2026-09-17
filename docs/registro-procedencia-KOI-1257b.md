@@ -34,19 +34,19 @@ Este es el DOI estándar y permanente que MAST asigna a la colección completa d
 | Algoritmo | SHA-256 |
 | Hash | `0ab279987251af320727d08b1dfde4fabae07e8915ce9feea91cbe230b8ebb9f` |
 | Tamaño | 8,049,901 bytes (128,417 filas × 4 columnas: time, flux, flux_err, quality) |
-| Preprocesamiento aplicado | Aplanado por trimestre individual (Savitzky-Golay, ventana 401 cadencias) antes de unir — método validado en la Fase 2 del proyecto Aletheia Space |
+| Preprocesamiento aplicado | Aplanado por trimestre individual (Savitzky-Golay, ventana 401 cadencias) antes de unir — método validado en la Fase 2 del proyecto Aletheia Ledger |
 
 ## 4. La cadena de verificación completa
 
 Cualquier persona puede verificar independientemente esta cadena de custodia siguiendo estos 3 pasos:
 
 1. **Verificar la fuente oficial**: resolver `https://doi.org/10.17909/T9059R` y confirmar que apunta a la misión Kepler en MAST.
-2. **Reproducir la descarga**: usar el mismo código público (`scripts/download_koi1257.py` en el repositorio de Aletheia Space) para descargar KOI-1257 vía `lightkurve` desde esa misma fuente.
+2. **Reproducir la descarga**: usar el mismo código público (`scripts/download_koi1257.py` en el repositorio de Aletheia Ledger) para descargar KOI-1257 vía `lightkurve` desde esa misma fuente.
 3. **Verificar el hash**: calcular el SHA-256 del CSV resultante y confirmar que coincide con `0ab279987251af320727d08b1dfde4fabae07e8915ce9feea91cbe230b8ebb9f` — si coincide, se confirma matemáticamente que los datos usados en el paper AAS80906 son exactamente reproducibles a partir de la fuente oficial citada, sin alteración.
 
 ## 5. Por qué esto es una innovación, no solo un trámite
 
-La citación estándar de DOI (lo que MAST/IPAC exigen) responde "¿de qué misión vienen los datos?" — pero no responde "¿puedo verificar que estos datos específicos, con este preprocesamiento específico, no fueron alterados?". Este registro cierra esa brecha aplicando el mismo principio de auditoría financiera usado en el resto del proyecto Aletheia Space (cadena de hashes, trazabilidad de procedencia) a la propia citación bibliográfica de datos — algo no encontrado en la revisión de literatura de vetting de exoplanetas realizada durante este proyecto (ExoMiner, Lightkurve, DAVE, LATTE no publican este tipo de vínculo explícito DOI-hash).
+La citación estándar de DOI (lo que MAST/IPAC exigen) responde "¿de qué misión vienen los datos?" — pero no responde "¿puedo verificar que estos datos específicos, con este preprocesamiento específico, no fueron alterados?". Este registro cierra esa brecha aplicando el mismo principio de auditoría financiera usado en el resto del proyecto Aletheia Ledger (cadena de hashes, trazabilidad de procedencia) a la propia citación bibliográfica de datos — algo no encontrado en la revisión de literatura de vetting de exoplanetas realizada durante este proyecto (ExoMiner, Lightkurve, DAVE, LATTE no publican este tipo de vínculo explícito DOI-hash).
 
 ---
 
