@@ -31,7 +31,13 @@ export function SignaturePanel({
   const { keyPair, signature, isSigning, error, generateKeys, signVerdict } =
     useVerdictSignature();
 
-  if (!finalLedgerHash) return null;
+  if (!finalLedgerHash) {
+    return (
+      <p className="text-sm text-ink-muted">
+        Aparecera aqui despues de ejecutar el escrutinio.
+      </p>
+    );
+  }
 
   const handleDownload = () => {
     if (!verdict || !sourceFileName) return;
@@ -58,15 +64,11 @@ export function SignaturePanel({
   };
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <h3 className="mb-3 text-base font-medium text-zinc-300">
-        Firma digital del veredicto (no repudio)
-      </h3>
-
+    <div className="space-y-3">
       {!keyPair && (
         <button
           onClick={() => void generateKeys()}
-          className="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+          className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-void hover:opacity-90"
         >
           Generar llaves de firma
         </button>
@@ -74,7 +76,7 @@ export function SignaturePanel({
 
       {keyPair && (
         <div className="space-y-3">
-          <p className="font-mono text-xs text-zinc-500">
+          <p className="font-mono text-xs text-ink-muted">
             Huella de llave publica: {truncate(keyPair.publicKeyFingerprint)}
           </p>
 
@@ -82,21 +84,21 @@ export function SignaturePanel({
             <button
               onClick={() => void signVerdict(finalLedgerHash)}
               disabled={isSigning}
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded-sm bg-signal-good px-4 py-2 text-sm font-medium text-void hover:opacity-90 disabled:opacity-50"
             >
               {isSigning ? "Firmando..." : "Firmar veredicto"}
             </button>
           )}
 
           {signature && (
-            <div className="rounded-md border border-emerald-900 bg-emerald-950/30 p-3">
-              <p className="mb-1 text-sm font-medium text-emerald-400">
+            <div className="rounded-sm border border-signal-good/40 bg-surface-raised p-3">
+              <p className="mb-1 text-sm font-medium text-signal-good">
                 Veredicto firmado
               </p>
-              <p className="font-mono text-xs text-zinc-500">
+              <p className="font-mono text-xs text-ink-muted">
                 Firma: {truncate(signature.signatureHex)}
               </p>
-              <p className="font-mono text-xs text-zinc-500">
+              <p className="font-mono text-xs text-ink-muted">
                 Firmado: {new Date(signature.signedAt).toISOString()}
               </p>
             </div>
@@ -107,7 +109,7 @@ export function SignaturePanel({
       <button
         onClick={handleDownload}
         disabled={!verdict}
-        className="mt-4 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="block w-full rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
       >
         Descargar reporte de auditoria (JSON)
       </button>
@@ -115,12 +117,12 @@ export function SignaturePanel({
       <button
         onClick={handleDownloadPdf}
         disabled={!verdict}
-        className="mt-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="block w-full rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
       >
         Descargar reporte de auditoria (PDF)
       </button>
 
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-signal-bad">{error}</p>}
     </div>
   );
 }

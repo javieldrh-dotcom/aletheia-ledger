@@ -35,11 +35,11 @@ export function NasaTargetSearch({ onSelectTarget }: NasaTargetSearchProps) {
   }, [query]);
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-      <h2 className="mb-1 text-base font-medium text-zinc-300">
+    <div className="rounded-sm border border-line bg-surface p-6">
+      <h2 className="mb-1 text-lg font-medium text-ink">
         Buscar objetivo en el NASA Exoplanet Archive
       </h2>
-      <p className="mb-4 text-xs text-zinc-600">
+      <p className="mb-4 text-sm text-ink-muted">
         Consulta en vivo al catalogo oficial (planetas confirmados y candidatos KOI). No incluye la curva de luz fotometrica -- solo los parametros orbitales.
       </p>
 
@@ -50,23 +50,23 @@ export function NasaTargetSearch({ onSelectTarget }: NasaTargetSearchProps) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
           placeholder="ej. KOI-1257, Kepler-1257 b"
-          className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-base text-zinc-200 placeholder:text-zinc-600 focus:border-cyan-600 focus:outline-none"
+          className="flex-1 rounded-sm border border-line bg-void px-3 py-2 text-lg text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none"
         />
         <button
           onClick={() => void handleSearch()}
           disabled={isSearching || query.trim() === ""}
-          className="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-sm bg-accent px-4 py-2 text-base font-medium text-white hover:bg-accent-dim disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isSearching ? "Buscando..." : "Buscar"}
         </button>
       </div>
 
       {error && (
-        <p className="mt-3 text-sm text-red-400">{error}</p>
+        <p className="mt-3 text-base text-red-400">{error}</p>
       )}
 
       {hasSearched && !error && !isSearching && results.length === 0 && (
-        <p className="mt-3 text-sm text-zinc-500">
+        <p className="mt-3 text-base text-ink-muted">
           No se encontraron resultados para &quot;{query}&quot;.
         </p>
       )}
@@ -77,12 +77,12 @@ export function NasaTargetSearch({ onSelectTarget }: NasaTargetSearchProps) {
             <button
               key={idx}
               onClick={() => onSelectTarget(result)}
-              className="block w-full rounded-md border border-zinc-700 bg-zinc-800 p-3 text-left hover:border-cyan-600"
+              className="block w-full rounded-sm border border-line bg-void p-3 text-left hover:border-accent"
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm text-zinc-200">{result.targetName}</span>
+                <span className="font-mono text-base text-ink">{result.targetName}</span>
                 <span
-                  className={`text-xs ${
+                  className={`text-sm ${
                     result.source === "confirmed_planet" ? "text-emerald-400" : "text-amber-400"
                   }`}
                 >
@@ -91,8 +91,8 @@ export function NasaTargetSearch({ onSelectTarget }: NasaTargetSearchProps) {
                     : result.disposition ?? "Candidato KOI"}
                 </span>
               </div>
-              <p className="mt-1 font-mono text-xs text-zinc-500">
-                P={result.periodDays.toFixed(4)}d · T0={result.epochBjd.toFixed(4)} BJD · Dur={result.durationHours.toFixed(2)}h
+              <p className="mt-1 font-mono text-sm text-ink-muted">
+                P={result.periodDays.toFixed(4)}d Ãƒâ€šÃ‚Â· T0={result.epochBjd.toFixed(4)} BJD Ãƒâ€šÃ‚Â· Dur={result.durationHours.toFixed(2)}h
               </p>
             </button>
           ))}

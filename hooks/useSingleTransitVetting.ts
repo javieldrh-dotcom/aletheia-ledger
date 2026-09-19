@@ -87,8 +87,15 @@ export function useSingleTransitVetting(): UseSingleTransitVettingResult {
         // en vez de usar el umbral ponderado del modo periodico.
         const isFalsePositive = criteria.some((c) => !c.passed);
 
+        // Abstencion de determinacion: un evento unico con muy pocos
+        // puntos dentro de la ventana de transito no ofrece evidencia
+        // suficiente para una conclusion binaria confiable, sin
+        // importar el resultado de los criterios individuales.
+        const isInconclusive = filteredPoints.length < 20;
+
         const newVerdict: VettingVerdict = {
           isFalsePositive,
+          isInconclusive,
           confidenceScore,
           criteria,
           algorithmVersion: ALGORITHM_VERSION,

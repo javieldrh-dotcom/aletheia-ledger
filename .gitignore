@@ -42,3 +42,6 @@ next-env.d.ts
 
 # python
 venv/
+
+# Datos de fotometria reproducibles -- ver scripts/expand_case_studies.py
+public/case-studies/*.csv

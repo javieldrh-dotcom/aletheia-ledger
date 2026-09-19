@@ -70,6 +70,7 @@ export interface SingleTransitParameters {
 
 export interface VettingVerdict {
   readonly isFalsePositive: boolean;
+  readonly isInconclusive: boolean;
   readonly confidenceScore: number;
   readonly criteria: readonly VettingCriterion[];
   readonly algorithmVersion: string;

@@ -59,7 +59,14 @@ export async function searchNasaTarget(targetQuery: string): Promise<NasaTargetR
       .map((row) => ({
         targetName: String(row.pl_name),
         periodDays: row.pl_orbper as number,
-        epochBjd: row.pl_tranmid as number,
+        // pscomppars devuelve pl_tranmid en BJD completo, pero todo
+        // nuestro pipeline de datos (CSV validados, conversor FITS-JS)
+        // usa BKJD = BJD - 2454833. Sin esta conversion, el plegado de
+        // fase queda desalineado por ~134 dias (ej. K01042.02) --
+        // reincidencia del mismo error de escala de tiempo ya
+        // diagnosticado con KOI-4878 en la Fase 2, encontrada aqui el
+        // 2026-09-07 al validar el flujo FITS-en-navegador.
+        epochBjd: (row.pl_tranmid as number) - 2454833,
         durationHours: row.pl_trandur as number,
         source: "confirmed_planet" as const,
       }));
@@ -68,7 +75,14 @@ export async function searchNasaTarget(targetQuery: string): Promise<NasaTargetR
   const koiQuery = `SELECT kepoi_name, koi_period, koi_time0bk, koi_duration, koi_disposition FROM cumulative WHERE kepoi_name LIKE '%${sanitized}%'`;
   const koiRows = await runTapQuery(koiQuery);
 
-  const BKJD_TO_BJD_OFFSET = 2454833; // offset estandar Kepler (Barycentric Kepler Julian Date)
+  // NOTA IMPORTANTE (bug real corregido el 2026-09-07): koi_time0bk ya
+  // esta definido oficialmente por la NASA como "BJD - 2454833", es
+  // decir, YA esta en BKJD -- el mismo formato que usa toda nuestra
+  // fotometria internamente (CSV validados y conversor FITS-JS).
+  // Sumarle el offset aqui lo convertia INCORRECTAMENTE a BJD
+  // completo, desalineando el plegado de fase por ~2.45 millones de
+  // dias -- descubierto al validar el flujo FITS-en-navegador con
+  // K01042.02 (KIC 5816811).
 
   return koiRows
     .filter(
@@ -80,7 +94,7 @@ export async function searchNasaTarget(targetQuery: string): Promise<NasaTargetR
     .map((row) => ({
       targetName: String(row.kepoi_name),
       periodDays: row.koi_period as number,
-      epochBjd: (row.koi_time0bk as number) + BKJD_TO_BJD_OFFSET,
+      epochBjd: row.koi_time0bk as number,
       durationHours: row.koi_duration as number,
       source: "koi_candidate" as const,
       disposition: row.koi_disposition ? String(row.koi_disposition) : undefined,

@@ -49,10 +49,10 @@ export function LightCurveUploader({ onDataLoaded }: LightCurveUploaderProps) {
   );
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+    <div className="rounded-sm border border-line bg-surface p-6">
       <label
         htmlFor="light-curve-file"
-        className="mb-3 block text-base font-medium text-zinc-300"
+        className="mb-3 block text-lg font-medium text-ink"
       >
         Cargar curva de luz (CSV)
       </label>
@@ -63,37 +63,37 @@ export function LightCurveUploader({ onDataLoaded }: LightCurveUploaderProps) {
         accept=".csv,.txt"
         onChange={handleFileChange}
         disabled={isReading}
-        className="block w-full text-base text-zinc-400 file:mr-4 file:rounded-md file:border-0 file:bg-cyan-600 file:px-4 file:py-2 file:text-base file:font-medium file:text-white hover:file:bg-cyan-500 disabled:opacity-50"
+        className="block w-full text-lg text-ink-muted file:mr-4 file:rounded-sm file:border-0 file:bg-accent file:px-4 file:py-2 file:text-lg file:font-medium file:text-white hover:file:bg-cyan-500 disabled:opacity-50"
       />
 
       {isReading && (
-        <p className="mt-3 text-base text-zinc-500">Procesando archivo...</p>
+        <p className="mt-3 text-lg text-ink-muted">Procesando archivo...</p>
       )}
 
       {fileName && !isReading && (
         <div className="mt-4 space-y-2">
-          <p className="text-base text-zinc-400">
+          <p className="text-lg text-ink-muted">
             Archivo:{" "}
-            <span className="font-mono text-zinc-200">{fileName}</span>
+            <span className="font-mono text-ink">{fileName}</span>
           </p>
-          <p className="text-base text-zinc-400">
+          <p className="text-lg text-ink-muted">
             Filas procesadas:{" "}
-            <span className="font-mono text-zinc-200">
+            <span className="font-mono text-ink">
               {totalRows - parseErrors.length}
             </span>{" "}
             validas de{" "}
-            <span className="font-mono text-zinc-200">{totalRows}</span>{" "}
+            <span className="font-mono text-ink">{totalRows}</span>{" "}
             totales
           </p>
         </div>
       )}
 
       {parseErrors.length > 0 && (
-        <div className="mt-4 rounded-md border border-amber-900 bg-amber-950/40 p-3">
-          <p className="mb-2 text-base font-medium text-amber-400">
+        <div className="mt-4 rounded-sm border border-amber-900 bg-amber-950/40 p-3">
+          <p className="mb-2 text-lg font-medium text-amber-400">
             {parseErrors.length} fila(s) con problemas:
           </p>
-          <ul className="max-h-32 space-y-1 overflow-y-auto text-sm text-amber-300/80">
+          <ul className="max-h-32 space-y-1 overflow-y-auto text-base text-amber-300/80">
             {parseErrors.slice(0, 10).map((err, idx) => (
               <li key={idx} className="font-mono">
                 Fila {err.rowNumber}: {err.reason}

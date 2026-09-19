@@ -18,7 +18,7 @@ interface LightCurveChartProps {
 }
 
 const QUALITY_COLORS: Record<DataQualityFlag, string> = {
-  clean: "#22d3ee",
+  clean: "#c9a86a",
   cosmic_ray: "#f97316",
   safe_mode: "#ef4444",
   attitude_tweak: "#eab308",
@@ -45,17 +45,17 @@ function CustomTooltip({
   const point = payload[0].payload;
 
   return (
-    <div className="rounded-md border border-zinc-700 bg-zinc-900 p-3 text-sm shadow-lg">
-      <p className="font-mono text-zinc-300">
-        BJD: <span className="text-cyan-400">{point.time.toFixed(5)}</span>
+    <div className="rounded-sm border border-line bg-surface p-3 text-base shadow-lg">
+      <p className="font-mono text-ink">
+        BJD: <span className="text-accent">{point.time.toFixed(5)}</span>
       </p>
-      <p className="font-mono text-zinc-300">
-        Flux: <span className="text-cyan-400">{point.flux.toFixed(6)}</span>
+      <p className="font-mono text-ink">
+        Flux: <span className="text-accent">{point.flux.toFixed(6)}</span>
       </p>
-      <p className="font-mono text-zinc-300">
-        Error: <span className="text-zinc-400">+/-{point.fluxError.toFixed(6)}</span>
+      <p className="font-mono text-ink">
+        Error: <span className="text-ink-muted">+/-{point.fluxError.toFixed(6)}</span>
       </p>
-      <p className="font-mono text-zinc-300">
+      <p className="font-mono text-ink">
         Calidad:{" "}
         <span style={{ color: QUALITY_COLORS[point.qualityFlag] }}>
           {point.qualityFlag}
@@ -104,15 +104,15 @@ export function LightCurveChart({ points }: LightCurveChartProps) {
 
   if (points.length === 0) {
     return (
-      <div className="flex h-96 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-sm text-zinc-500">
+      <div className="flex h-96 items-center justify-center rounded-sm border border-line bg-surface text-base text-ink-muted">
         Carga una curva de luz para visualizarla aqui.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-4 text-sm text-zinc-400">
+    <div className="rounded-sm border border-line bg-surface p-4">
+      <div className="mb-3 flex flex-wrap items-center gap-4 text-base text-ink-muted">
         {Object.entries(QUALITY_COLORS).map(([flag, color]) => (
           <div key={flag} className="flex items-center gap-1.5">
             <span
@@ -156,11 +156,11 @@ export function LightCurveChart({ points }: LightCurveChartProps) {
             }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Scatter data={chartData} fill="#22d3ee" isAnimationActive={false} />
+          <Scatter data={chartData} fill="#c9a86a" isAnimationActive={false} />
           <Brush
             dataKey="time"
             height={24}
-            stroke="#22d3ee"
+            stroke="#c9a86a"
             fill="#18181b"
             travellerWidth={8}
           />

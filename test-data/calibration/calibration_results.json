@@ -1,0 +1,1051 @@
+[
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.03046983888596243,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0023391812865497076,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.115572252598101,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0009422886801779536,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.8904109589041096,
+        "passed": false
+      },
+      "secondary": {
+        "value": -1.3480903845216035,
+        "passed": true
+      }
+    },
+    "confidence": 0.8664383561643836,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K03384.02",
+    "kepid": 8644365,
+    "disposition": "CONFIRMED",
+    "n_points": 64736,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.20148285637890412,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.01059322033898305,
+        "passed": false
+      },
+      "noise": {
+        "value": 56.99244452124754,
+        "passed": false
+      },
+      "flare": {
+        "value": 0.0,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.563697705802969,
+        "passed": false
+      },
+      "secondary": {
+        "value": -0.0009960976478978042,
+        "passed": true
+      }
+    },
+    "confidence": 0.4436302294197031,
+    "isFalsePositive": true,
+    "vetoed": false,
+    "kepoi_name": "K01804.01",
+    "kepid": 11187436,
+    "disposition": "CONFIRMED",
+    "n_points": 64792,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.13814141698516572,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0019860973187686196,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.0846233906196439,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010814986481266899,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.9416666666666667,
+        "passed": false
+      },
+      "secondary": {
+        "value": -0.9304937836732777,
+        "passed": true
+      }
+    },
+    "confidence": 0.8587500000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K02494.01",
+    "kepid": 7047207,
+    "disposition": "CONFIRMED",
+    "n_points": 64725,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.054944488925641834,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0007342143906020558,
+        "passed": false
+      },
+      "noise": {
+        "value": 2.296171040888889,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.01495296349347683,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6838056680161944,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.799845606805059,
+        "passed": true
+      }
+    },
+    "confidence": 0.8974291497975708,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00369.01",
+    "kepid": 7175184,
+    "disposition": "CONFIRMED",
+    "n_points": 103324,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.01104751871911826,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.01910828025477707,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.2982765536767937,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0007416792855156216,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": -2.273316993401647,
+        "passed": true
+      }
+    },
+    "confidence": 0.8500000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K04014.01",
+    "kepid": 9009953,
+    "disposition": "CONFIRMED",
+    "n_points": 64718,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.06828726317384398,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0013095597864410194,
+        "passed": false
+      },
+      "noise": {
+        "value": 0.9853710292015028,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0013272466476606534,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": -0.4373308112673541,
+        "passed": true
+      }
+    },
+    "confidence": 0.8500000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00157.03",
+    "kepid": 6541920,
+    "disposition": "CONFIRMED",
+    "n_points": 1848187,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.044728939047676844,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0030165912518853697,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.0985379795387353,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010969316812409233,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6955752212389381,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.16827511428846906,
+        "passed": true
+      }
+    },
+    "confidence": 0.8956637168141593,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K02413.01",
+    "kepid": 3234598,
+    "disposition": "CONFIRMED",
+    "n_points": 64726,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.06864515104021458,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0058823529411764705,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.0524360922145943,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0012971980522072323,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": 0.20516218695948676,
+        "passed": true
+      }
+    },
+    "confidence": 0.8500000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K04384.01",
+    "kepid": 5860968,
+    "disposition": "CONFIRMED",
+    "n_points": 50108,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.07768082970065933,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.005025125628140704,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.2268253070371065,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0009734390209984703,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.736904761904762,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.6217287134151938,
+        "passed": true
+      }
+    },
+    "confidence": 0.8894642857142857,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K01521.01",
+    "kepid": 9818462,
+    "disposition": "CONFIRMED",
+    "n_points": 64719,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.19075508780858566,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.0002844747884218761,
+        "passed": false
+      },
+      "noise": {
+        "value": 0.8709775820349945,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008593423643850331,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": 0.6335837323663231,
+        "passed": true
+      }
+    },
+    "confidence": 0.6000000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00941.02",
+    "kepid": 9480189,
+    "disposition": "CONFIRMED",
+    "n_points": 418925,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.1440882133482848,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.00489853044086774,
+        "passed": false
+      },
+      "noise": {
+        "value": 6.2937260299931665,
+        "passed": false
+      },
+      "flare": {
+        "value": 0.0006331655187324335,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.5788631346578367,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.5653903976071741,
+        "passed": true
+      }
+    },
+    "confidence": 0.5868294701986756,
+    "isFalsePositive": true,
+    "vetoed": false,
+    "kepoi_name": "K02013.01",
+    "kepid": 4056616,
+    "disposition": "CONFIRMED",
+    "n_points": 64754,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.060358685625434075,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0036231884057971015,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.347040596456205,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010198878123406426,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6621145374449339,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.7480318275524238,
+        "passed": true
+      }
+    },
+    "confidence": 0.9006828193832599,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K02105.01",
+    "kepid": 8165946,
+    "disposition": "CONFIRMED",
+    "n_points": 64713,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.05936454777883866,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0008424599831508003,
+        "passed": false
+      },
+      "noise": {
+        "value": 0.484430433195131,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.017316143471621574,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": -0.9363497416327151,
+        "passed": true
+      }
+    },
+    "confidence": 0.8500000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K01601.02",
+    "kepid": 5438757,
+    "disposition": "CONFIRMED",
+    "n_points": 171574,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.1601274923960484,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.003303964757709251,
+        "passed": false
+      },
+      "noise": {
+        "value": 0.8709806282071099,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008593423643850331,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": 0.5146810488988879,
+        "passed": true
+      }
+    },
+    "confidence": 0.6000000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00941.03",
+    "kepid": 9480189,
+    "disposition": "CONFIRMED",
+    "n_points": 418925,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.04501665246784221,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.012727272727272728,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.125733603806708,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008810845068245405,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.7696078431372548,
+        "passed": false
+      },
+      "secondary": {
+        "value": -1.5165995671494934,
+        "passed": true
+      }
+    },
+    "confidence": 0.8845588235294118,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00471.01",
+    "kepid": 10019643,
+    "disposition": "CONFIRMED",
+    "n_points": 64693,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.003305734236184845,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.109375,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.0602506499459514,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008070899750112527,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.5520325203252032,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.05762704869397498,
+        "passed": true
+      }
+    },
+    "confidence": 0.9171951219512195,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K06033.01",
+    "kepid": 7219906,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64429,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.0070017707250706164,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.16787158436466118,
+        "passed": true
+      },
+      "noise": {
+        "value": 12.244519197663186,
+        "passed": false
+      },
+      "flare": {
+        "value": 4.6299154268782026e-05,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.8196631414022718,
+        "passed": false
+      },
+      "secondary": {
+        "value": -197.13449258850744,
+        "passed": true
+      }
+    },
+    "confidence": 0.7458989424206816,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K05058.01",
+    "kepid": 4365461,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64796,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.15383427065715075,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.0015756302521008404,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.0786343796941984,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008745165866645937,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6098039215686275,
+        "passed": false
+      },
+      "secondary": {
+        "value": -1.4780633502782154,
+        "passed": true
+      }
+    },
+    "confidence": 0.756078431372549,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K07503.01",
+    "kepid": 12004680,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 51457,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.25889404814981076,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.025,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.1096932052140789,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0025188916876574307,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.536036036036036,
+        "passed": false
+      },
+      "secondary": {
+        "value": -1.1438862453683152,
+        "passed": true
+      }
+    },
+    "confidence": 0.7855855855855856,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K03698.01",
+    "kepid": 4372765,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 20644,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.1637978534898164,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.0006015812994156067,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.294184233798744,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0008031756328869531,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.7706675971156083,
+        "passed": false
+      },
+      "secondary": {
+        "value": -2.6132291050117997,
+        "passed": true
+      }
+    },
+    "confidence": 0.6917329611537568,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K04887.01",
+    "kepid": 4059887,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64743,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.03225071146023871,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.00015839074998020116,
+        "passed": false
+      },
+      "noise": {
+        "value": 2.4389159912758465,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.00037085683380978134,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.7692898272552783,
+        "passed": false
+      },
+      "secondary": {
+        "value": -2.4570884996997533,
+        "passed": true
+      }
+    },
+    "confidence": 0.8846065259117083,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K04662.01",
+    "kepid": 10407210,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64715,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.20674065631459765,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.003883495145631068,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.1602221308170253,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010193207617106056,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6973180076628352,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.3279371838828956,
+        "passed": true
+      }
+    },
+    "confidence": 0.7210727969348659,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K01752.01",
+    "kepid": 8127586,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64749,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.05524775274315846,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.10721247563352826,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.7332420282587218,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0007655053897828464,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.5686746987951807,
+        "passed": false
+      },
+      "secondary": {
+        "value": 70.24779912269086,
+        "passed": false
+      }
+    },
+    "confidence": 0.8009638554216867,
+    "isFalsePositive": true,
+    "vetoed": true,
+    "kepoi_name": "K07524.01",
+    "kepid": 12353720,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64010,
+    "correct": true
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.3199761666410271,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.005681818181818182,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.2106960389275487,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010042332293050706,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.5977777777777777,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.8088380882673645,
+        "passed": true
+      }
+    },
+    "confidence": 0.760888888888889,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K05347.01",
+    "kepid": 7024045,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64726,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.0025128539884626687,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.1456092069051789,
+        "passed": false
+      },
+      "noise": {
+        "value": 15.718238816521417,
+        "passed": false
+      },
+      "flare": {
+        "value": 0.00016988941743374312,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.5965458937198067,
+        "passed": false
+      },
+      "secondary": {
+        "value": 87.05411504423361,
+        "passed": false
+      }
+    },
+    "confidence": 0.4701727053140097,
+    "isFalsePositive": true,
+    "vetoed": true,
+    "kepoi_name": "K07446.01",
+    "kepid": 11455795,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64748,
+    "correct": true
+  },
+  {
+    "kepoi_name": "K06272.01",
+    "disposition": "FALSE POSITIVE",
+    "error": "Error in reading Data product C:\\Users\\jeset\\.cache\\lightkurve\\mastDownload\\HLSP\\hlsp_iris_kepler_kepler_kplr002438517-stitched_kepler_v1.0_lc\\hlsp_iris_kepler_kepler_kplr002438517-stitched_kepler_v1.0_lc.fits of type generic .\nThis file may be corrupt due to an interrupted download. Please remove it from your disk and try again."
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.26034825697463765,
+        "passed": false
+      },
+      "shape": {
+        "value": 0.0006031363088057901,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.109051845921948,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0006953458186538105,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6031736154324829,
+        "passed": false
+      },
+      "secondary": {
+        "value": -1.4804680246239894,
+        "passed": true
+      }
+    },
+    "confidence": 0.7587305538270068,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K05270.02",
+    "kepid": 6363560,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64716,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.020596132170776306,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.00919160971011077,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.1217828213330834,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0010399850987209735,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.6098938098938099,
+        "passed": false
+      },
+      "secondary": {
+        "value": 0.6831521048580285,
+        "passed": true
+      }
+    },
+    "confidence": 0.9085159285159284,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K06797.01",
+    "kepid": 6953219,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64424,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.07381901165988616,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.0005192107995846313,
+        "passed": false
+      },
+      "noise": {
+        "value": 0.5397280593792992,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.009918968953273108,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 1.0,
+        "passed": true
+      },
+      "secondary": {
+        "value": 0.02115603483038717,
+        "passed": true
+      }
+    },
+    "confidence": 0.8500000000000001,
+    "isFalsePositive": false,
+    "vetoed": false,
+    "kepoi_name": "K00515.01",
+    "kepid": 7812179,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 197702,
+    "correct": false
+  },
+  {
+    "criteria": {
+      "odd_even": {
+        "value": 0.008293001723155726,
+        "passed": true
+      },
+      "shape": {
+        "value": 0.03720106288751107,
+        "passed": false
+      },
+      "noise": {
+        "value": 1.1520033909532839,
+        "passed": true
+      },
+      "flare": {
+        "value": 0.0007136319210661041,
+        "passed": true
+      },
+      "sufficiency": {
+        "value": 0.7301732925586136,
+        "passed": false
+      },
+      "secondary": {
+        "value": 39.478459736565,
+        "passed": false
+      }
+    },
+    "confidence": 0.7444393476044853,
+    "isFalsePositive": true,
+    "vetoed": true,
+    "kepoi_name": "K01042.02",
+    "kepid": 5816811,
+    "disposition": "FALSE POSITIVE",
+    "n_points": 64459,
+    "correct": true
+  }
+]

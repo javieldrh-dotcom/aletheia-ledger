@@ -1,0 +1,7 @@
+[
+  {
+    "kepoi_name": "K00490.04",
+    "kepid": 3239945,
+    "error": "Error in reading Data product C:\\Users\\jeset\\.cache\\lightkurve\\mastDownload\\Kepler\\kplr003239945_sc_Q000000000333333332\\kplr003239945-2013098041711_slc.fits of type KeplerLightCurve .\nThis file may be corrupt due to an interrupted download. Please remove it from your disk and try again."
+  }
+]

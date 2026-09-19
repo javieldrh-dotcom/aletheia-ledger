@@ -3,33 +3,37 @@
 import { useCallback, useState } from "react";
 import { LightCurveUploader } from "@/components/LightCurveUploader";
 import { NasaTargetSearch } from "@/components/NasaTargetSearch";
+import { FetchByKic } from "@/components/FetchByKic";
 import type { NasaTargetResult } from "@/lib/nasa/exoplanetArchive";
 import { LightCurveChart } from "@/components/LightCurveChart";
 import { VettingResults } from "@/components/VettingResults";
 import { ProvenanceChain } from "@/components/ProvenanceChain";
 import { SignaturePanel } from "@/components/SignaturePanel";
+import { CaseStudyGallery } from "@/components/CaseStudyGallery";
+import { ToolsMenu } from "@/components/ToolsMenu";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { useLightCurveFilter } from "@/hooks/useLightCurveFilter";
 import { useSingleTransitVetting } from "@/hooks/useSingleTransitVetting";
 import type { FluxDataPoint } from "@/types/photometry";
 import type { TransitParametersReport } from "@/lib/audit/exportReport";
 
 type VettingMode = "periodic" | "single_transit";
+type DataSource = "csv" | "nasa" | "kic";
 
 export default function Home() {
   const [mode, setMode] = useState<VettingMode>("periodic");
+  const [dataSource, setDataSource] = useState<DataSource>("csv");
   const [dataPoints, setDataPoints] = useState<FluxDataPoint[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const [periodDays, setPeriodDays] = useState("");
   const [epochBjd, setEpochBjd] = useState("");
   const [durationHours, setDurationHours] = useState("");
-
   const [midTransitBjd, setMidTransitBjd] = useState("");
   const [singleDurationHours, setSingleDurationHours] = useState("");
 
   const periodic = useLightCurveFilter();
   const single = useSingleTransitVetting();
-
   const active = mode === "periodic" ? periodic : single;
 
   const handleNasaTargetSelected = useCallback((result: NasaTargetResult) => {
@@ -38,10 +42,23 @@ export default function Home() {
     setDurationHours(String(result.durationHours));
   }, []);
 
-  const handleDataLoaded = useCallback(
-    (points: FluxDataPoint[], name: string) => {
+  const handleDataLoaded = useCallback((points: FluxDataPoint[], name: string) => {
+    setDataPoints(points);
+    setFileName(name);
+  }, []);
+
+  const handleCaseSelected = useCallback(
+    (
+      points: FluxDataPoint[],
+      name: string,
+      params: { periodDays: number; epochBjd: number; durationHours: number }
+    ) => {
       setDataPoints(points);
       setFileName(name);
+      setMode("periodic");
+      setPeriodDays(String(params.periodDays));
+      setEpochBjd(String(params.epochBjd));
+      setDurationHours(String(params.durationHours));
     },
     []
   );
@@ -66,29 +83,12 @@ export default function Home() {
         transitDurationHours: duration,
       });
     }
-  }, [
-    mode,
-    dataPoints,
-    periodDays,
-    epochBjd,
-    durationHours,
-    midTransitBjd,
-    singleDurationHours,
-    periodic,
-    single,
-  ]);
+  }, [mode, dataPoints, periodDays, epochBjd, durationHours, midTransitBjd, singleDurationHours, periodic, single]);
 
   const canRunVetting =
     mode === "periodic"
-      ? dataPoints.length > 0 &&
-        periodDays.trim() !== "" &&
-        epochBjd.trim() !== "" &&
-        durationHours.trim() !== "" &&
-        !periodic.isProcessing
-      : dataPoints.length > 0 &&
-        midTransitBjd.trim() !== "" &&
-        singleDurationHours.trim() !== "" &&
-        !single.isProcessing;
+      ? dataPoints.length > 0 && periodDays.trim() !== "" && epochBjd.trim() !== "" && durationHours.trim() !== "" && !periodic.isProcessing
+      : dataPoints.length > 0 && midTransitBjd.trim() !== "" && singleDurationHours.trim() !== "" && !single.isProcessing;
 
   const finalLedgerHash =
     active.provenanceLedger.length > 0
@@ -97,143 +97,117 @@ export default function Home() {
 
   const transitParametersReport: TransitParametersReport =
     mode === "periodic"
-      ? {
-          mode: "periodic",
-          periodDays: Number(periodDays) || 0,
-          epochBjd: Number(epochBjd) || 0,
-          transitDurationHours: Number(durationHours) || 0,
-        }
-      : {
-          mode: "single_transit",
-          midTransitBjd: Number(midTransitBjd) || 0,
-          transitDurationHours: Number(singleDurationHours) || 0,
-        };
+      ? { mode: "periodic", periodDays: Number(periodDays) || 0, epochBjd: Number(epochBjd) || 0, transitDurationHours: Number(durationHours) || 0 }
+      : { mode: "single_transit", midTransitBjd: Number(midTransitBjd) || 0, transitDurationHours: Number(singleDurationHours) || 0 };
+
+  const criteriaLabel = mode === "periodic" ? "6 criterios de transito periodico" : "Criterios de transito unico";
 
   const inputClass =
-    "w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-base text-zinc-200 placeholder:text-zinc-600 focus:border-cyan-600 focus:outline-none";
+    "w-full rounded-sm border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none";
+
+  const sourceTabClass = (isActive: boolean) =>
+    `rounded-sm px-3 py-1.5 text-sm transition-colors ${
+      isActive ? "bg-surface-raised text-ink" : "border border-line text-ink-muted hover:text-ink"
+    }`;
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-zinc-100">
-            Aletheia Space
-          </h1>
-          <p className="mt-1 text-base text-zinc-500">
-            Vetting explicable de curvas de luz fotometricas - descarte de
-            falsos positivos estelares
-          </p>
+    <main className="min-h-screen bg-void text-ink">
+      <div className="mx-auto w-full max-w-[1600px] px-8 py-8 lg:px-12">
+        <header className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-2xl font-bold tracking-tight text-ink">
+              Aletheia Ledger
+            </h1>
+            <p className="mt-1 text-base text-ink-muted">
+              Vetting explicable de curvas de luz fotometricas - descarte de falsos positivos estelares
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode("periodic")}
+              className={`rounded-sm px-4 py-2 text-sm font-medium transition-colors ${
+                mode === "periodic" ? "bg-accent text-void" : "border border-line text-ink-muted hover:text-ink"
+              }`}
+            >
+              Transito periodico
+            </button>
+            <button
+              onClick={() => setMode("single_transit")}
+              className={`rounded-sm px-4 py-2 text-sm font-medium transition-colors ${
+                mode === "single_transit" ? "bg-accent text-void" : "border border-line text-ink-muted hover:text-ink"
+              }`}
+            >
+              Transito unico / periodo largo
+            </button>
+          </div>
         </header>
 
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setMode("periodic")}
-            className={`rounded-md px-4 py-2 text-sm font-medium ${
-              mode === "periodic"
-                ? "bg-cyan-600 text-white"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-            }`}
-          >
-            Transito periodico
-          </button>
-          <button
-            onClick={() => setMode("single_transit")}
-            className={`rounded-md px-4 py-2 text-sm font-medium ${
-              mode === "single_transit"
-                ? "bg-cyan-600 text-white"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-            }`}
-          >
-            Transito unico / periodo largo
-          </button>
-        </div>
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_400px]">
+          <div className="flex flex-col gap-5 min-w-0">
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
+                Fuente de datos
+              </p>
+              <div className="mb-4 flex gap-2">
+                <button onClick={() => setDataSource("csv")} className={sourceTabClass(dataSource === "csv")}>
+                  CSV manual
+                </button>
+                <button onClick={() => setDataSource("nasa")} className={sourceTabClass(dataSource === "nasa")}>
+                  Buscar en NASA Archive
+                </button>
+                <button onClick={() => setDataSource("kic")} className={sourceTabClass(dataSource === "kic")}>
+                  Descargar por KIC
+                </button>
+              </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <LightCurveUploader onDataLoaded={handleDataLoaded} />
+              {dataSource === "csv" && <LightCurveUploader onDataLoaded={handleDataLoaded} />}
+              {dataSource === "nasa" && mode === "periodic" && (
+                <NasaTargetSearch onSelectTarget={handleNasaTargetSelected} />
+              )}
+              {dataSource === "kic" && <FetchByKic onDataLoaded={handleDataLoaded} />}
 
-            {mode === "periodic" && (
-              <NasaTargetSearch onSelectTarget={handleNasaTargetSelected} />
-            )}
+              {fileName ? (
+                <p className="mt-3 text-sm text-ink-muted">
+                  {fileName} - {dataPoints.length.toLocaleString()} puntos cargados
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-ink-muted">
+                  Ningun dato cargado todavia - elige una fuente arriba para empezar.
+                </p>
+              )}
+            </section>
 
             <LightCurveChart points={dataPoints} />
 
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-              <h2 className="mb-4 text-base font-medium text-zinc-300">
-                {mode === "periodic"
-                  ? "Parametros del transito candidato"
-                  : "Parametros del evento candidato (transito unico)"}
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <h2 className="mb-4 text-base font-medium text-ink">
+                {mode === "periodic" ? "Parametros del transito candidato" : "Parametros del evento candidato"}
               </h2>
 
               {mode === "periodic" ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs text-zinc-500">
-                      Periodo (dias)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={periodDays}
-                      onChange={(e) => setPeriodDays(e.target.value)}
-                      placeholder="ej. 3.5225"
-                      className={inputClass}
-                    />
+                    <label className="mb-1 block text-xs text-ink-muted">Periodo (dias)</label>
+                    <input type="number" step="any" value={periodDays} onChange={(e) => setPeriodDays(e.target.value)} placeholder="ej. 3.5225" className={inputClass} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-zinc-500">
-                      Epoca (BJD)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={epochBjd}
-                      onChange={(e) => setEpochBjd(e.target.value)}
-                      placeholder="ej. 2454970.5"
-                      className={inputClass}
-                    />
+                    <label className="mb-1 block text-xs text-ink-muted">Epoca (BJD)</label>
+                    <input type="number" step="any" value={epochBjd} onChange={(e) => setEpochBjd(e.target.value)} placeholder="ej. 2454970.5" className={inputClass} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-zinc-500">
-                      Duracion (horas)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={durationHours}
-                      onChange={(e) => setDurationHours(e.target.value)}
-                      placeholder="ej. 3.2"
-                      className={inputClass}
-                    />
+                    <label className="mb-1 block text-xs text-ink-muted">Duracion (horas)</label>
+                    <input type="number" step="any" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} placeholder="ej. 3.2" className={inputClass} />
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs text-zinc-500">
-                      Tiempo central del evento (BJD)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={midTransitBjd}
-                      onChange={(e) => setMidTransitBjd(e.target.value)}
-                      placeholder="ej. 2455015.0"
-                      className={inputClass}
-                    />
+                    <label className="mb-1 block text-xs text-ink-muted">Tiempo central del evento (BJD)</label>
+                    <input type="number" step="any" value={midTransitBjd} onChange={(e) => setMidTransitBjd(e.target.value)} placeholder="ej. 2455015.0" className={inputClass} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-zinc-500">
-                      Duracion (horas)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={singleDurationHours}
-                      onChange={(e) => setSingleDurationHours(e.target.value)}
-                      placeholder="ej. 6.0"
-                      className={inputClass}
-                    />
+                    <label className="mb-1 block text-xs text-ink-muted">Duracion (horas)</label>
+                    <input type="number" step="any" value={singleDurationHours} onChange={(e) => setSingleDurationHours(e.target.value)} placeholder="ej. 6.0" className={inputClass} />
                   </div>
                 </div>
               )}
@@ -241,36 +215,49 @@ export default function Home() {
               <button
                 onClick={handleRunVetting}
                 disabled={!canRunVetting}
-                className="mt-4 rounded-md bg-cyan-600 px-4 py-2 text-base font-medium text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-4 rounded-sm bg-accent px-4 py-2 text-sm font-medium text-void transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                {active.isProcessing ? "Procesando..." : "Ejecutar vetting"}
+                {active.isProcessing ? "Procesando..." : "Ejecutar escrutinio"}
               </button>
+            </section>
 
-              {fileName && (
-                <p className="mt-3 text-xs text-zinc-600">
-                  Analizando: {fileName} ({dataPoints.length} puntos)
-                </p>
-              )}
-            </div>
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 text-xs text-ink-muted">{criteriaLabel}</p>
+              <VettingResults
+                verdict={active.verdict}
+                sourceHash={finalLedgerHash}
+                isProcessing={active.isProcessing}
+                error={active.error}
+              />
+            </section>
           </div>
 
-          <div className="lg:col-span-1 space-y-6">
-            <VettingResults
-              verdict={active.verdict}
-              sourceHash={finalLedgerHash}
-              isProcessing={active.isProcessing}
-              error={active.error}
-            />
+          <div className="flex flex-col gap-5 min-w-0">
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
+                Cadena de proveniencia
+              </p>
+              <ProvenanceChain ledger={active.provenanceLedger} />
+            </section>
 
-            <ProvenanceChain ledger={active.provenanceLedger} />
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
+                Firma y exportacion
+              </p>
+              <SignaturePanel
+                finalLedgerHash={finalLedgerHash}
+                verdict={active.verdict}
+                provenanceLedger={active.provenanceLedger}
+                sourceFileName={fileName}
+                transitParameters={transitParametersReport}
+              />
+            </section>
 
-            <SignaturePanel
-              finalLedgerHash={finalLedgerHash}
-              verdict={active.verdict}
-              provenanceLedger={active.provenanceLedger}
-              sourceFileName={fileName}
-              transitParameters={transitParametersReport}
-            />
+            <ToolsMenu>
+              <CollapsibleSection title="Galeria de casos" badge="30+">
+                <CaseStudyGallery onSelectCase={handleCaseSelected} />
+              </CollapsibleSection>
+            </ToolsMenu>
           </div>
         </div>
       </div>
