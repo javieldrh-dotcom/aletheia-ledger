@@ -164,7 +164,7 @@ export default function Home() {
               {dataSource === "nasa" && mode === "periodic" && (
                 <NasaTargetSearch onSelectTarget={handleNasaTargetSelected} />
               )}
-              {dataSource === "kic" && <FetchByKic onDataLoaded={handleDataLoaded} />}
+              {dataSource === "kic" && <FetchByKic onDataFetched={handleDataLoaded} />}
 
               {fileName ? (
                 <p className="mt-3 text-sm text-ink-muted">

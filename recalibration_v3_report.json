@@ -1,0 +1,10 @@
+{
+  "n_processed": 252,
+  "n_confirmed": 127,
+  "n_false_positive": 125,
+  "best_shape_weight": 0.0,
+  "best_odd_even_weight": 0.15,
+  "best_recall": 0.52,
+  "best_precision": 0.8441558441558441,
+  "best_accuracy": 0.7142857142857143
+}

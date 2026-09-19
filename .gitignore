@@ -45,3 +45,5 @@ venv/
 
 # Datos de fotometria reproducibles -- ver scripts/expand_case_studies.py
 public/case-studies/*.csv
+
+install-*.ps1

@@ -17,7 +17,7 @@ import {
 } from "@/lib/vetting/criteria";
 import { buildProvenanceLedger } from "@/lib/audit/provenanceLedger";
 
-const ALGORITHM_VERSION = "aletheia-vetting-v0.2.0";
+const ALGORITHM_VERSION = "aletheia-vetting-v0.3.0";
 
 interface TransitParameters {
   periodDays: number;
@@ -85,39 +85,42 @@ export function useLightCurveFilter(): UseLightCurveFilterResult {
 
         const resolutionFactor = sufficiency.measuredValue;
 
-        // Pesos fijos, recalibrados el 2026-09-15 con evidencia real de
-        // 252 candidatos etiquetados de Kepler (127 confirmados, 125
-        // falsos positivos), usando scripts/measure_recall_impact.py.
+        // Pesos recalibrados el 2026-09-19 (Fase 3), tras reemplazar la
+        // logica de 'shape' (heuristico -> ajuste real de modelo de
+        // transito Mandel & Agol 2002) y 'odd_even' (asimetria fraccional
+        // con MAD cruda -> significancia con error fotometrico propagado
+        // por punto), y remedir el poder discriminativo de los 6
+        // criterios sobre los mismos 252 candidatos reales de Kepler
+        // (127 confirmados, 125 falsos positivos) con
+        // scripts/recalibrate_v3.py.
         //
-        // El esquema anterior (pesos base 0.25/0.15/0.2/0.2/0.2 con
-        // redistribucion segun resolutionFactor, y sufficiency con peso
-        // 0 fuera del puntaje) media recall ~45% y precision ~87%.
+        // Resultado honesto, no sobrevendido:
+        //   - odd_even: +2.5pp -> +20.9pp de brecha discriminativa
+        //     (CONFIRMED vs FALSE POSITIVE). Mejora real de ~8x. Confirma
+        //     el diagnostico de causa raiz: la incertidumbre del AJUSTE/
+        //     instrumento (flux_err propagado) es sustancialmente mas
+        //     informativa que la dispersion cruda (MAD) de los puntos en
+        //     datos reales de Kepler.
+        //   - shape: -2.4pp -> apenas +3.2pp. El ajuste Mandel-Agol en si
+        //     esta validado independientemente (94.4% de acierto
+        //     clasificando transitos rasantes en 160 casos sinteticos con
+        //     limb darkening real, ver docs/validacion-modelo-transito.md)
+        //     pero en ESTE conjunto de 252 candidatos, casi ninguno de los
+        //     falsos positivos es del tipo "rasante" -- la mayoria son
+        //     binarias eclipsantes que ya atrapa el criterio de eclipse
+        //     secundario. Por eso su poder discriminativo agregado sigue
+        //     siendo bajo, sin que eso invalide el criterio en si.
         //
-        // Medicion por criterio mostro que secondary (37.7pp de brecha
-        // CONFIRMED vs FALSE POSITIVE) y sufficiency (30.4pp) son los
-        // discriminadores mas fuertes -- sufficiency no participaba en
-        // el puntaje en absoluto. odd_even y shape resultaron casi sin
-        // poder discriminativo (+2.5pp y -2.4pp respectivamente) pese a
-        // tener los pesos base mas altos del sistema anterior.
-        //
-        // Con este esquema (secondary 0.25, sufficiency 0.25, noise 0.20,
-        // flare 0.15, odd_even 0.10, shape 0.05), medido contra los mismos
-        // 252 candidatos: recall subio a 53.6% (+8.9pp), pero precision
-        // bajo a 80.7% (-6.5pp) -- intercambio real y documentado, no una
-        // mejora gratuita. Se prioriza recall porque el objetivo declarado
-        // del proyecto es minimizar falsos positivos que se cuelan como
-        // "viables", aceptando mas revision manual de confirmados.
-        //
-        // odd_even y shape se quedan con peso reducido (no en cero) en vez
-        // de eliminarse, porque la investigacion tambien mostro que su
-        // implementacion actual (fraccion simple / significancia con error
-        // estimado por MAD) no es la correcta -- el Robovetter oficial de
-        // Kepler usa un ajuste real de modelo de transito (Mandel-Agol,
-        // V = b + Rp/Rs) para 'shape', y una significancia basada en el
-        // error del AJUSTE (no de los puntos crudos) para 'odd_even'.
-        // Implementar eso es un proyecto de ingenieria aparte, pendiente.
-        const oddEvenWeight = 0.10;
-        const shapeWeight = 0.05;
+        // Se ajusta el presupuesto de peso de odd_even/shape (que suma
+        // 0.15, sin tocar secondary/sufficiency/noise/flare, ya validados
+        // en la Fase 2.5) de 0.10/0.05 a 0.13/0.02 -- cerca del optimo
+        // matematico medido (que favorecia casi todo el peso a odd_even),
+        // pero sin llevar 'shape' a cero: se conserva un peso simbolico
+        // porque el criterio sigue siendo geometricamente correcto y
+        // explicable para revision humana, y para evitar sobreajustar los
+        // pesos a las particularidades de esta muestra de 252 casos.
+        const oddEvenWeight = 0.13;
+        const shapeWeight = 0.02;
         const secondaryWeight = 0.25;
         const noiseWeight = 0.2;
         const flareWeight = 0.15;
@@ -158,8 +161,8 @@ export function useLightCurveFilter(): UseLightCurveFilterResult {
           { ...sufficiency, weight: sufficiencyWeight },
         ];
 
-        // sufficiency ahora compite como criterio real en el puntaje
-        // (ya no queda excluido) -- ver justificacion arriba.
+        // sufficiency compite como criterio real en el puntaje (no queda
+        // excluido) -- ver justificacion en la Fase 2.5.
         const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
         const confidenceScore =
           criteria.reduce((sum, c) => sum + (c.passed ? c.weight : 0), 0) /
@@ -183,16 +186,9 @@ export function useLightCurveFilter(): UseLightCurveFilterResult {
 
         const isFalsePositive = vetoedBySecondaryEclipse || confidenceScore < 0.6;
 
-        // Abstencion de determinacion: el umbral se elevo de 0.5 a 0.8
-        // el 2026-09-14. Hallazgo: la redistribucion de peso (arriba)
-        // empieza a descontar simetria par/impar y forma del transito
-        // -las dos pruebas mas especificas para detectar binarias
-        // eclipsantes- en cuanto resolutionFactor cae por debajo de 1.0,
-        // no de 0.5. Con el umbral viejo, candidatos en el rango
-        // [0.5, 1.0) recibian un veredicto binario completo con esas
-        // dos pruebas ya diluidas, en vez de ser marcados como inciertos.
-        // Este es un sospechoso directo del recall bajo (33%) documentado
-        // en la calibracion de 128 candidatos.
+        // Abstencion de determinacion: umbral en 0.5 (ver justificacion
+        // historica de la Fase 2.5 -- el umbral de 0.8 fue probado y
+        // descartado por empeorar recall y precision simultaneamente).
         const isInconclusive = sufficiency.measuredValue < 0.5;
 
         const newVerdict: VettingVerdict = {

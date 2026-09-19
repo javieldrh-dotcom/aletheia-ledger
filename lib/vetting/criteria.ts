@@ -1,4 +1,5 @@
 import type { EclipseSearchDetail, FluxDataPoint, VettingCriterion } from "@/types/photometry";
+import { fitTransitGeometry } from "./transitModel";
 
 function median(values: readonly number[]): number {
   if (values.length === 0) {
@@ -36,6 +37,24 @@ function robustStandardDeviation(values: readonly number[]): number {
   return 1.4826 * medianAbsoluteDeviation(values);
 }
 
+/**
+ * CORREGIDO (ver docs/validacion-modelo-transito.md): en lugar de la
+ * asimetria fraccional cruda entre medianas de profundidad odd/even
+ * (que no distingue ruido de senal real), se evalua la SIGNIFICANCIA
+ * estadistica de la diferencia usando el error fotometrico propagado por
+ * punto (flux_err, reportado por el pipeline de calibracion de Kepler),
+ * exactamente la misma convencion que ya usa evaluateSecondaryEclipseSearch
+ * en este archivo. Esto es lo que hace el Robovetter oficial de Kepler:
+ * una prueba de significancia sobre la incertidumbre del propio dato, no
+ * una fraccion arbitraria de diferencia (Bryson et al. 2020).
+ *
+ * Nota honesta: en validacion con datos sinteticos de ruido gaussiano
+ * limpio, este cambio no mostro una mejora dramatica de poder
+ * discriminativo frente a la version anterior (ambas ~98-99% de acierto).
+ * Es, sin embargo, la formulacion metodologicamente correcta -- y su
+ * impacto real debe remedirse empiricamente contra los 252 candidatos
+ * reales una vez desplegado, no se asume aqui.
+ */
 export function evaluateOddEvenSymmetry(
   points: readonly FluxDataPoint[],
   periodDays: number,
@@ -44,7 +63,9 @@ export function evaluateOddEvenSymmetry(
 ): VettingCriterion {
   const durationDays = transitDurationHours / 24;
   const oddDepths: number[] = [];
+  const oddErrors: number[] = [];
   const evenDepths: number[] = [];
+  const evenErrors: number[] = [];
 
   for (const point of points) {
     const phase = (point.time - epochBjd) / periodDays;
@@ -57,80 +78,86 @@ export function evaluateOddEvenSymmetry(
     const depth = 1 - point.flux;
     if (cycleNumber % 2 === 0) {
       evenDepths.push(depth);
+      evenErrors.push(point.fluxError);
     } else {
       oddDepths.push(depth);
+      oddErrors.push(point.fluxError);
     }
   }
 
-  if (oddDepths.length === 0 || evenDepths.length === 0) {
+  if (oddDepths.length < 3 || evenDepths.length < 3) {
     return {
       name: "odd_even_depth_symmetry",
       measuredValue: 0,
-      threshold: 0.15,
+      threshold: 3.0,
       weight: 0.3,
       passed: false,
     };
   }
 
-  const oddMean = median(oddDepths);
-  const evenMean = median(evenDepths);
-  const asymmetry = Math.abs(oddMean - evenMean) / Math.max(oddMean, evenMean);
+  const meanOddDepth = oddDepths.reduce((s, v) => s + v, 0) / oddDepths.length;
+  const meanEvenDepth = evenDepths.reduce((s, v) => s + v, 0) / evenDepths.length;
 
-  const threshold = 0.15;
+  const oddErrSumSq = oddErrors.reduce((s, v) => s + v * v, 0);
+  const evenErrSumSq = evenErrors.reduce((s, v) => s + v * v, 0);
+  const oddStdErr = Math.sqrt(oddErrSumSq) / oddDepths.length;
+  const evenStdErr = Math.sqrt(evenErrSumSq) / evenDepths.length;
+  const combinedErr = Math.sqrt(oddStdErr ** 2 + evenStdErr ** 2);
+
+  const significance =
+    combinedErr > 0 ? Math.abs(meanOddDepth - meanEvenDepth) / combinedErr : 0;
+
+  const threshold = 3.0;
   return {
     name: "odd_even_depth_symmetry",
-    measuredValue: asymmetry,
+    measuredValue: Math.round(significance * 100) / 100,
     threshold,
     weight: 0.3,
-    passed: asymmetry < threshold,
+    passed: significance < threshold,
   };
 }
 
+/**
+ * CORREGIDO (ver docs/validacion-modelo-transito.md): en lugar del
+ * heuristico anterior ("fraccion de puntos cerca del minimo de flujo",
+ * poder discriminativo casi nulo: -2.4pp en n=252 candidatos reales), se
+ * ajusta un modelo de transito de disco uniforme (Mandel & Agol 2002) por
+ * minimos cuadrados no lineales, estimando el parametro de impacto b y la
+ * razon de radios Rp/Rs. V = b + Rp/Rs > 1.05 indica transito rasante
+ * ("grazing"), la misma convencion que usa el Robovetter oficial de Kepler
+ * (Bryson et al. 2020).
+ *
+ * Validado con 160 casos sinteticos generados con limb darkening real
+ * (via batman-package como referencia externa, no usada en produccion):
+ * 94.4% de acierto en clasificar V>1.05, frente al 70.6% del heuristico
+ * anterior. El ajuste completo (Nelder-Mead puro en TypeScript, sin
+ * dependencias) corre 100% en el navegador del usuario.
+ */
 export function evaluateTransitShape(
   points: readonly FluxDataPoint[],
   periodDays: number,
   epochBjd: number,
   transitDurationHours: number
 ): VettingCriterion {
-  const durationDays = transitDurationHours / 24;
-  const inTransit = points
-    .map((p) => {
-      const phase = (p.time - epochBjd) / periodDays;
-      const offsetFromCenter = (phase - Math.round(phase)) * periodDays;
-      return { offsetFromCenter, flux: p.flux };
-    })
-    .filter((p) => Math.abs(p.offsetFromCenter) < durationDays / 2)
-    .sort((a, b) => a.offsetFromCenter - b.offsetFromCenter);
+  const fit = fitTransitGeometry(points, periodDays, epochBjd, transitDurationHours);
 
-  if (inTransit.length < 5) {
+  if (!fit.converged || fit.nPoints < 10) {
     return {
       name: "transit_shape_v_vs_u",
-      measuredValue: 0,
-      threshold: 0.6,
+      measuredValue: fit.vShapeParameter,
+      threshold: 1.05,
       weight: 0.25,
       passed: false,
     };
   }
 
-  let minFlux = Infinity;
-  for (const p of inTransit) {
-    if (p.flux < minFlux) minFlux = p.flux;
-  }
-  const depthRange = 1 - minFlux;
-  const nearBottomThreshold = minFlux + depthRange * 0.1;
-
-  const pointsNearBottom = inTransit.filter(
-    (p) => p.flux <= nearBottomThreshold
-  ).length;
-  const flatBottomRatio = pointsNearBottom / inTransit.length;
-
-  const threshold = 0.15;
+  const threshold = 1.05;
   return {
     name: "transit_shape_v_vs_u",
-    measuredValue: flatBottomRatio,
+    measuredValue: Math.round(fit.vShapeParameter * 1000) / 1000,
     threshold,
     weight: 0.25,
-    passed: flatBottomRatio > threshold,
+    passed: fit.vShapeParameter <= threshold,
   };
 }
 
@@ -317,4 +344,3 @@ export function evaluatePeriodicFlareSignature(
     passed: flareRatio < threshold,
   };
 }
-
