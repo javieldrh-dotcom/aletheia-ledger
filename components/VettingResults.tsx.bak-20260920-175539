@@ -1,6 +1,5 @@
 "use client";
 
-import { CheckCircle2, XCircle, ShieldCheck, ShieldAlert, HelpCircle } from "lucide-react";
 import type { VettingCriterion, VettingVerdict } from "@/types/photometry";
 
 interface VettingResultsProps {
@@ -41,15 +40,10 @@ function CriterionLedgerRow({ criterion }: { criterion: VettingCriterion }) {
         {criterion.threshold.toFixed(4)}
       </span>
       <span
-        className={`flex items-center gap-1.5 text-xs font-medium tabular-nums ${
+        className={`text-xs font-medium tabular-nums ${
           criterion.passed ? "text-signal-good" : "text-signal-bad"
         }`}
       >
-        {criterion.passed ? (
-          <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
-        ) : (
-          <XCircle className="h-3.5 w-3.5" strokeWidth={2} />
-        )}
         {criterion.passed ? "Aprobado" : "Fallido"}
       </span>
     </div>
@@ -96,11 +90,6 @@ export function VettingResults({
     : verdict.isFalsePositive
       ? "text-signal-bad"
       : "text-signal-good";
-  const VerdictIcon = verdict.isInconclusive
-    ? HelpCircle
-    : verdict.isFalsePositive
-      ? ShieldAlert
-      : ShieldCheck;
 
   // Auditoria continua: un veredicto "viable" que, ademas, tiene
   // confianza en la banda intermedia o algun criterio individual
@@ -118,10 +107,7 @@ export function VettingResults({
   return (
     <div className="rounded-sm border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
-        <span className={`flex items-center gap-2 font-serif text-xl ${verdictColor}`}>
-          <VerdictIcon className="h-5 w-5" strokeWidth={1.75} />
-          {verdictLabel}
-        </span>
+        <span className={`font-serif text-xl ${verdictColor}`}>{verdictLabel}</span>
         <span className="font-mono text-sm text-ink-muted tabular-nums">
           {(verdict.confidenceScore * 100).toFixed(1)}%
         </span>

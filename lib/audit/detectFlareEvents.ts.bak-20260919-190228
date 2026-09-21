@@ -1,0 +1,125 @@
+import type { FlareEvent } from "@/types/stellarActivity";
+import type { FluxDataPoint } from "@/types/photometry";
+
+/**
+ * Deteccion de eventos candidatos a llamarada en una curva de luz.
+ *
+ * Metodo: igual que el criterio de llamaradas periodicas ya validado en el
+ * motor de transitos (mediana + MAD robusto como linea base y estimador de
+ * ruido), pero en vez de solo contar puntos por encima del umbral, agrupa
+ * puntos consecutivos por encima del umbral en EVENTOS individuales, cada
+ * uno con su propio inicio, pico y fin -- porque los 6 criterios de
+ * Auditoria Estelar evaluan la FORMA de cada evento (subida vs decaimiento,
+ * duracion, amplitud), no solo si hubo "algo raro" en la curva completa.
+ *
+ * Este es el mismo principio de explicabilidad del proyecto: en vez de
+ * decir "hay actividad estelar anomala", el modulo debe poder senalar
+ * exactamente CUANDO ocurrio, CUANTO duro y COMO se comparo su forma con
+ * la de una llamarada fisica real.
+ */
+
+const SIGMA_THRESHOLD = 4; // mismo umbral que evaluatePeriodicFlareSignature
+const MIN_POST_PEAK_POINTS = 3; // minimo de puntos tras el pico para medir decaimiento
+
+function median(values: readonly number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function robustStandardDeviation(values: readonly number[]): number {
+  const med = median(values);
+  const deviations = values.map((v) => Math.abs(v - med));
+  return 1.4826 * median(deviations);
+}
+
+export function detectFlareEvents(
+  points: readonly FluxDataPoint[]
+): FlareEvent[] {
+  if (points.length < 10) return [];
+
+  const fluxValues = points.map((p) => p.flux);
+  const baseline = median(fluxValues);
+  const noise = robustStandardDeviation(fluxValues);
+
+  if (noise <= 0) return [];
+
+  const flareThreshold = baseline + SIGMA_THRESHOLD * noise;
+
+  const events: FlareEvent[] = [];
+  let i = 0;
+
+  while (i < points.length) {
+    if (points[i].flux <= flareThreshold) {
+      i++;
+      continue;
+    }
+
+    // Encontramos el inicio de un posible evento: retrocedemos hasta el
+    // ultimo punto por debajo de la linea base (o el borde del arreglo)
+    // para capturar la fase de subida completa.
+    let startIndex = i;
+    while (startIndex > 0 && points[startIndex - 1].flux > baseline) {
+      startIndex--;
+    }
+
+    // Avanzamos capturando todo el tramo por encima del umbral (puede
+    // tener multiples picos locales, es un solo evento mientras no
+    // regrese a la linea base).
+    let endIndex = i;
+    let peakIndex = i;
+    let peakFlux = points[i].flux;
+
+    while (endIndex + 1 < points.length && points[endIndex + 1].flux > baseline) {
+      endIndex++;
+      if (points[endIndex].flux > peakFlux) {
+        peakFlux = points[endIndex].flux;
+        peakIndex = endIndex;
+      }
+    }
+
+    // Extendemos el final un poco mas alla del cruce de linea base para
+    // tener puntos suficientes de la cola de decaimiento (necesarios para
+    // el criterio de morfologia FRED).
+    let tailExtension = 0;
+    while (
+      endIndex + 1 < points.length &&
+      tailExtension < MIN_POST_PEAK_POINTS &&
+      points[endIndex + 1].flux < points[endIndex].flux
+    ) {
+      endIndex++;
+      tailExtension++;
+    }
+
+    const localBaselineWindow = points
+      .slice(Math.max(0, startIndex - 20), startIndex)
+      .map((p) => p.flux);
+    const localBaseline =
+      localBaselineWindow.length > 0 ? median(localBaselineWindow) : baseline;
+
+    const amplitude =
+      localBaseline > 0 ? (peakFlux - localBaseline) / localBaseline : 0;
+    const durationDays = points[endIndex].time - points[startIndex].time;
+    const peakSignificance = noise > 0 ? (peakFlux - baseline) / noise : 0;
+
+    events.push({
+      startIndex,
+      peakIndex,
+      endIndex,
+      startTime: points[startIndex].time,
+      peakTime: points[peakIndex].time,
+      endTime: points[endIndex].time,
+      baselineFlux: localBaseline,
+      peakFlux,
+      amplitude,
+      durationDays,
+      peakSignificance,
+    });
+
+    i = endIndex + 1;
+  }
+
+  return events;
+}

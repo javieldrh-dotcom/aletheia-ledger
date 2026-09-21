@@ -1,0 +1,235 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { CheckCircle2, Flame, HelpCircle, XCircle } from "lucide-react";
+import type { StellarAuditVerdict } from "@/types/stellarActivity";
+
+interface StellarAuditResultsProps {
+  verdicts: readonly StellarAuditVerdict[];
+  isProcessing: boolean;
+  error: string | null;
+}
+
+const PAGE_SIZE = 30;
+
+/**
+ * Muestra el resultado de la Auditoria Estelar: un evento candidato a
+ * llamarada por bloque, con su veredicto agregado y el detalle de cada
+ * criterio -- SIEMPRE con la explicacion de que mide (campo `explanation`)
+ * y la interpretacion especifica del resultado obtenido (campo
+ * `interpretation`), no solo un numero y un pass/fail.
+ *
+ * DISEÑO (2026-09-19, tras probar con datos reales): una curva real de
+ * Kepler sin filtrar por bandera de calidad puede producir cientos de
+ * eventos candidatos, la gran mayoria correctamente rechazados como
+ * artefacto (confianza 0%). Volcar todos expandidos hace la pagina
+ * inutilizable. Por eso aqui:
+ *   - Los eventos se ordenan por interes: candidatos a llamarada real
+ *     primero, luego no concluyentes, luego artefactos -- dentro de cada
+ *     grupo, por confianza descendente.
+ *   - El detalle de criterios viene COLAPSADO por defecto para artefactos
+ *     (la explicacion pedagogica sigue disponible con un clic, no se
+ *     pierde, solo no se impone).
+ *   - Se pagina la lista (30 a la vez) en vez de renderizar todo de una.
+ */
+export function StellarAuditResults({
+  verdicts,
+  isProcessing,
+  error,
+}: StellarAuditResultsProps) {
+  const [hideArtifacts, setHideArtifacts] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const sorted = useMemo(() => {
+    const rank = (v: StellarAuditVerdict) =>
+      v.isInconclusive ? 1 : v.isLikelyArtifact ? 2 : 0;
+    return [...verdicts].sort((a, b) => {
+      const rankDiff = rank(a) - rank(b);
+      if (rankDiff !== 0) return rankDiff;
+      return b.confidenceScore - a.confidenceScore;
+    });
+  }, [verdicts]);
+
+  const filtered = useMemo(
+    () => (hideArtifacts ? sorted.filter((v) => !v.isLikelyArtifact) : sorted),
+    [sorted, hideArtifacts]
+  );
+
+  if (isProcessing) {
+    return <p className="text-sm text-ink-muted">Analizando curva de luz...</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-sm border border-signal-bad/40 bg-signal-bad/10 p-4 text-sm text-signal-bad">
+        {error}
+      </div>
+    );
+  }
+
+  if (verdicts.length === 0) {
+    return (
+      <p className="text-sm text-ink-muted">
+        Sin resultados todavia -- carga una curva de luz y ejecuta la
+        auditoria, o no se detectaron eventos candidatos a llamarada en los
+        datos cargados (umbral: 4σ sobre la línea base local, sostenido por
+        al menos 2 puntos consecutivos).
+      </p>
+    );
+  }
+
+  const realCount = verdicts.filter(
+    (v) => !v.isLikelyArtifact && !v.isInconclusive
+  ).length;
+  const artifactCount = verdicts.filter((v) => v.isLikelyArtifact).length;
+  const inconclusiveCount = verdicts.length - realCount - artifactCount;
+
+  const visible = filtered.slice(0, visibleCount);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-ink-muted">
+          {verdicts.length} evento{verdicts.length !== 1 ? "s" : ""} candidato
+          {verdicts.length !== 1 ? "s" : ""} ·{" "}
+          <span className="inline-flex items-center gap-1 text-signal-good">
+            <Flame className="h-3.5 w-3.5" strokeWidth={2} />
+            {realCount} probable{realCount !== 1 ? "s" : ""} llamarada real
+          </span>
+          {" · "}
+          <span className="inline-flex items-center gap-1 text-ink-muted">
+            <HelpCircle className="h-3.5 w-3.5" strokeWidth={2} />
+            {inconclusiveCount} no concluyente{inconclusiveCount !== 1 ? "s" : ""}
+          </span>
+          {" · "}
+          <span className="inline-flex items-center gap-1 text-signal-bad">
+            <XCircle className="h-3.5 w-3.5" strokeWidth={2} />
+            {artifactCount} artefacto{artifactCount !== 1 ? "s" : ""}
+          </span>
+        </p>
+        {artifactCount > 0 && (
+          <label className="flex items-center gap-2 text-xs text-ink-muted">
+            <input
+              type="checkbox"
+              checked={hideArtifacts}
+              onChange={(e) => {
+                setHideArtifacts(e.target.checked);
+                setVisibleCount(PAGE_SIZE);
+              }}
+            />
+            Ocultar artefactos
+          </label>
+        )}
+      </div>
+
+      {visible.map((verdict, idx) => (
+        <StellarAuditEventCard key={idx} verdict={verdict} index={idx} />
+      ))}
+
+      {filtered.length > visibleCount && (
+        <button
+          onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+          className="self-start rounded-sm border border-line px-4 py-2 text-sm text-ink-muted transition-colors hover:text-ink"
+        >
+          Mostrar {Math.min(PAGE_SIZE, filtered.length - visibleCount)} más
+          ({filtered.length - visibleCount} restantes)
+        </button>
+      )}
+    </div>
+  );
+}
+
+function StellarAuditEventCard({
+  verdict,
+  index,
+}: {
+  verdict: StellarAuditVerdict;
+  index: number;
+}) {
+  const { event, criteria, confidenceScore, isLikelyArtifact, isInconclusive } =
+    verdict;
+
+  // Colapsado por defecto para artefactos (la mayoria de los casos en una
+  // curva real sin filtrar) -- expandido por defecto para candidatos
+  // reales y casos no concluyentes, que son los que vale la pena revisar
+  // de entrada.
+  const [expanded, setExpanded] = useState(!isLikelyArtifact);
+
+  const statusLabel = isInconclusive
+    ? "No concluyente"
+    : isLikelyArtifact
+    ? "Probable artefacto"
+    : "Llamarada real probable";
+
+  const statusColor = isInconclusive
+    ? "text-ink-muted"
+    : isLikelyArtifact
+    ? "text-signal-bad"
+    : "text-signal-good";
+
+  const StatusIcon = isInconclusive ? HelpCircle : isLikelyArtifact ? XCircle : Flame;
+
+  return (
+    <div className="rounded-sm border border-line bg-surface-raised p-4">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="mb-1 flex w-full flex-wrap items-baseline justify-between gap-2 text-left"
+      >
+        <div>
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-muted">
+            Evento {index + 1} · t = {event.peakTime.toFixed(4)}
+          </p>
+          <p className={`mt-1 flex items-center gap-1.5 text-base font-medium ${statusColor}`}>
+            <StatusIcon className="h-4 w-4" strokeWidth={1.75} />
+            {statusLabel} — {(confidenceScore * 100).toFixed(0)}% de confianza
+          </p>
+        </div>
+        <div className="text-right text-xs text-ink-muted">
+          <p>Amplitud: {(event.amplitude * 100).toFixed(2)}%</p>
+          <p>Duración: {event.durationDays.toFixed(3)} días</p>
+          <p>Significancia: {event.peakSignificance.toFixed(1)}σ</p>
+          <p className="mt-1 text-[10px]">{expanded ? "▲ ocultar detalle" : "▼ ver detalle"}</p>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 flex flex-col gap-2">
+          {criteria.map((criterion) => (
+            <div
+              key={criterion.name}
+              className="rounded-sm border border-line bg-surface p-3"
+            >
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-ink">
+                  {criterion.displayName}
+                </p>
+                <span
+                  className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium ${
+                    criterion.passed
+                      ? "bg-signal-good/10 text-signal-good"
+                      : "bg-signal-bad/10 text-signal-bad"
+                  }`}
+                >
+                  {criterion.passed ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5" strokeWidth={2} />
+                  )}
+                  {criterion.passed ? "PASA" : "NO PASA"}
+                </span>
+              </div>
+              <p className="mb-1 text-xs text-ink-muted">
+                {criterion.explanation}
+              </p>
+              <p className="text-xs text-ink">{criterion.interpretation}</p>
+              <p className="mt-1 font-mono text-[10px] text-ink-muted">
+                medido = {criterion.measuredValue} · umbral = {criterion.threshold}{" "}
+                · peso = {(criterion.weight * 100).toFixed(0)}%
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

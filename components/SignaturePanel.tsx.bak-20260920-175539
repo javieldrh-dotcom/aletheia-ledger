@@ -1,6 +1,5 @@
 "use client";
 
-import { KeyRound, ShieldCheck, FileJson, FileText } from "lucide-react";
 import { useVerdictSignature } from "@/hooks/useVerdictSignature";
 import {
   buildAuditReport,
@@ -69,9 +68,8 @@ export function SignaturePanel({
       {!keyPair && (
         <button
           onClick={() => void generateKeys()}
-          className="flex items-center gap-2 rounded-sm bg-accent px-4 py-2 text-sm font-medium text-void hover:opacity-90"
+          className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-void hover:opacity-90"
         >
-          <KeyRound className="h-4 w-4" strokeWidth={2} />
           Generar llaves de firma
         </button>
       )}
@@ -86,17 +84,15 @@ export function SignaturePanel({
             <button
               onClick={() => void signVerdict(finalLedgerHash)}
               disabled={isSigning}
-              className="flex items-center gap-2 rounded-sm bg-signal-good px-4 py-2 text-sm font-medium text-void hover:opacity-90 disabled:opacity-50"
+              className="rounded-sm bg-signal-good px-4 py-2 text-sm font-medium text-void hover:opacity-90 disabled:opacity-50"
             >
-              <ShieldCheck className="h-4 w-4" strokeWidth={2} />
               {isSigning ? "Firmando..." : "Firmar veredicto"}
             </button>
           )}
 
           {signature && (
             <div className="rounded-sm border border-signal-good/40 bg-surface-raised p-3">
-              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-signal-good">
-                <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+              <p className="mb-1 text-sm font-medium text-signal-good">
                 Veredicto firmado
               </p>
               <p className="font-mono text-xs text-ink-muted">
@@ -113,18 +109,16 @@ export function SignaturePanel({
       <button
         onClick={handleDownload}
         disabled={!verdict}
-        className="flex w-full items-center gap-2 rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
+        className="block w-full rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <FileJson className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         Descargar reporte de auditoria (JSON)
       </button>
 
       <button
         onClick={handleDownloadPdf}
         disabled={!verdict}
-        className="flex w-full items-center gap-2 rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
+        className="block w-full rounded-sm border border-line bg-void px-4 py-2 text-left text-sm font-medium text-ink hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <FileText className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         Descargar reporte de auditoria (PDF)
       </button>
 

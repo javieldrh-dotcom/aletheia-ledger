@@ -1,0 +1,182 @@
+import type { FlareEvent } from "@/types/stellarActivity";
+import type { FluxDataPoint } from "@/types/photometry";
+
+/**
+ * Deteccion de eventos candidatos a llamarada en una curva de luz.
+ *
+ * Metodo (v2, 2026-09-19): mediana movil LOCAL como linea base, en vez de
+ * una unica mediana global para toda la curva. Agrupa puntos consecutivos
+ * por encima del umbral en EVENTOS individuales, cada uno con su propio
+ * inicio, pico y fin -- porque los 6 criterios de Auditoria Estelar evaluan
+ * la FORMA de cada evento (subida vs decaimiento, duracion, amplitud), no
+ * solo si hubo "algo raro" en la curva completa.
+ *
+ * CORRECCION DE UNA LIMITACION REAL (encontrada durante la validacion del
+ * hook de agregacion useStellarAudit, no en produccion): la version 1 de
+ * este detector usaba una sola mediana GLOBAL de toda la curva como linea
+ * base. Eso funciona bien si el brillo de fondo es estable, pero se rompe
+ * con estrellas que tienen modulacion rotacional fuerte (manchas estelares
+ * rotando dentro y fuera de vista) -- la mediana global no sigue esa
+ * modulacion, así que el umbral de deteccion queda mal calibrado: puede
+ * ser demasiado alto (perdiendo llamaradas reales durante la fase mas
+ * brillante de la rotacion) o el rastreo de inicio/fin de evento puede
+ * extenderse incorrectamente durante tramos completos por encima de la
+ * mediana global que en realidad son solo la modulacion normal.
+ *
+ * La correccion: en vez de una linea base global, se calcula una mediana
+ * MOVIL (ventana deslizante de ROLLING_HALF_WIDTH puntos a cada lado) que
+ * sigue la modulacion periodica de fondo sin dejarse arrastrar por una
+ * llamarada individual (que dura mucho menos que la ventana). El "ruido"
+ * se mide sobre el RESIDUO (flujo menos esa linea base local), que es
+ * mucho mas estable/estacionario que el flujo crudo cuando hay modulacion
+ * de fondo. Validado con datos sinteticos: correctamente separa una
+ * llamarada real y un artefacto instrumental inyectados sobre una
+ * modulacion rotacional de 4.1 dias (antes, con la v1, ningun evento se
+ * detectaba en ese mismo escenario -- ver test_detect_v2.ts).
+ */
+
+const SIGMA_THRESHOLD = 4; // mismo umbral que evaluatePeriodicFlareSignature
+const MIN_POST_PEAK_POINTS = 3; // minimo de puntos tras el pico para medir decaimiento
+const ROLLING_HALF_WIDTH = 20; // ventana movil: 20 puntos a cada lado (41 en total)
+
+function median(values: readonly number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function robustStandardDeviation(values: readonly number[]): number {
+  const med = median(values);
+  const deviations = values.map((v) => Math.abs(v - med));
+  return 1.4826 * median(deviations);
+}
+
+/**
+ * Mediana movil: para cada punto, la mediana de una ventana centrada a su
+ * alrededor. Sigue tendencias lentas (modulacion rotacional) sin dejarse
+ * arrastrar por eventos cortos (llamaradas), siempre que su duracion sea
+ * menor que la ventana -- condicion tipicamente cierta (llamaradas: minutos
+ * a horas; rotacion estelar: dias).
+ */
+function rollingMedian(
+  values: readonly number[],
+  halfWidth: number
+): number[] {
+  const n = values.length;
+  const result = new Array<number>(n);
+  for (let i = 0; i < n; i++) {
+    const lo = Math.max(0, i - halfWidth);
+    const hi = Math.min(n, i + halfWidth + 1);
+    result[i] = median(values.slice(lo, hi));
+  }
+  return result;
+}
+
+export function detectFlareEvents(
+  points: readonly FluxDataPoint[]
+): FlareEvent[] {
+  if (points.length < 10) return [];
+
+  const fluxValues = points.map((p) => p.flux);
+  const localBaseline = rollingMedian(fluxValues, ROLLING_HALF_WIDTH);
+  const residual = fluxValues.map((f, idx) => f - localBaseline[idx]);
+  const noise = robustStandardDeviation(residual);
+
+  if (noise <= 0) return [];
+
+  const residualThreshold = SIGMA_THRESHOLD * noise;
+
+  const events: FlareEvent[] = [];
+  // Empezamos y terminamos con margen de ROLLING_HALF_WIDTH: cerca de los
+  // bordes del arreglo la ventana movil queda truncada (asimetrica, con
+  // menos puntos futuros o pasados de los que deberia), lo que puede
+  // atrasar la linea base local frente a la modulacion real y generar un
+  // residuo espurio. Se sacrifica sensibilidad a llamaradas genuinas en
+  // ese tramo muy pequeno (tipicamente ~20 puntos de miles o cientos de
+  // miles en una curva real) a cambio de eliminar ese falso positivo de
+  // borde -- confirmado con datos sinteticos (ver test_compound.ts).
+  let i = ROLLING_HALF_WIDTH;
+  const lastValidIndex = points.length - ROLLING_HALF_WIDTH;
+
+  while (i < lastValidIndex) {
+    if (residual[i] <= residualThreshold) {
+      i++;
+      continue;
+    }
+
+    // Encontramos el inicio de un posible evento: retrocedemos hasta el
+    // ultimo punto por debajo de SU linea base local (o el borde del
+    // arreglo) para capturar la fase de subida completa.
+    let startIndex = i;
+    while (startIndex > 0 && residual[startIndex - 1] > 0) {
+      startIndex--;
+    }
+
+    // Avanzamos capturando todo el tramo por encima de la linea base local
+    // (puede tener multiples picos locales, es un solo evento mientras no
+    // regrese a su linea base).
+    let endIndex = i;
+    let peakIndex = i;
+    let peakResidual = residual[i];
+
+    while (endIndex + 1 < points.length && residual[endIndex + 1] > 0) {
+      endIndex++;
+      if (residual[endIndex] > peakResidual) {
+        peakResidual = residual[endIndex];
+        peakIndex = endIndex;
+      }
+    }
+
+    // Extendemos el final un poco mas alla del cruce de linea base para
+    // tener puntos suficientes de la cola de decaimiento (necesarios para
+    // el criterio de morfologia FRED).
+    let tailExtension = 0;
+    while (
+      endIndex + 1 < points.length &&
+      tailExtension < MIN_POST_PEAK_POINTS &&
+      points[endIndex + 1].flux < points[endIndex].flux
+    ) {
+      endIndex++;
+      tailExtension++;
+    }
+
+    // Linea base local "estatica" para el evento (mediana del flujo crudo
+    // en la ventana justo antes del inicio) -- se usa para el calculo de
+    // amplitud y para el ajuste de decaimiento exponencial del criterio de
+    // morfologia FRED, que necesita un unico valor de referencia estable
+    // durante todo el evento, no una linea base que se mueva punto a punto.
+    const localBaselineWindow = points
+      .slice(Math.max(0, startIndex - 20), startIndex)
+      .map((p) => p.flux);
+    const eventBaselineFlux =
+      localBaselineWindow.length > 0
+        ? median(localBaselineWindow)
+        : localBaseline[startIndex];
+
+    const peakFlux = points[peakIndex].flux;
+    const amplitude =
+      eventBaselineFlux > 0 ? (peakFlux - eventBaselineFlux) / eventBaselineFlux : 0;
+    const durationDays = points[endIndex].time - points[startIndex].time;
+    const peakSignificance = noise > 0 ? peakResidual / noise : 0;
+
+    events.push({
+      startIndex,
+      peakIndex,
+      endIndex,
+      startTime: points[startIndex].time,
+      peakTime: points[peakIndex].time,
+      endTime: points[endIndex].time,
+      baselineFlux: eventBaselineFlux,
+      peakFlux,
+      amplitude,
+      durationDays,
+      peakSignificance,
+    });
+
+    i = endIndex + 1;
+  }
+
+  return events;
+}

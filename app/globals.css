@@ -7,17 +7,41 @@
   --color-line: #262c36;
   --color-ink: #e8e6df;
   --color-ink-muted: #8b93a1;
-  --color-accent: #c9a86a;
-  --color-accent-dim: #8a7248;
+  --color-accent: #06b6d4;
+  --color-accent-dim: #0e7490;
   --color-signal-good: #7fb069;
   --color-signal-bad: #c1666b;
   --font-serif: "Source Serif 4", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-sans: "Inter", ui-sans-serif, system-ui;
+
+  /*
+   * ALCANCE (2026-09-20): al subir este valor, CUALQUIER elemento del
+   * proyecto que ya use la clase "rounded-sm" (que es practicamente
+   * todo -- tarjetas, botones, inputs, en los 13 componentes de la
+   * plataforma) se vuelve mas redondeado de forma automatica, sin
+   * tocar un solo archivo de componente. Se elige un valor cercano al
+   * "rounded-xl" del mockup de referencia.
+   */
+  --radius-sm: 0.75rem;
 }
 
 body {
-  background: var(--color-void);
+  background: radial-gradient(
+    ellipse 1200px 800px at 50% -10%,
+    #10202b 0%,
+    var(--color-void) 60%
+  );
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+/*
+ * Utilidad de brillo/glow con el color de acento -- se usa de forma
+ * selectiva (por ahora, alrededor del grafico de curva de luz) para
+ * acercar la presentacion visual al mockup de referencia, que tiene
+ * ese efecto de resplandor cian alrededor del panel del grafico.
+ */
+.glow-accent {
+  box-shadow: 0 0 60px -18px var(--color-accent);
 }

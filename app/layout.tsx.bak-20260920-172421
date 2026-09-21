@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
 
 const sourceSerif = Source_Serif_4({
   variable: "--font-serif",
@@ -19,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Aletheia Ledger — Vetting de exoplanetas",
+  title: "Aletheia Space \u2014 Vetting de exoplanetas",
   description: "Motor explicable y auditable de descarte de falsos positivos en curvas de luz fotometricas",
 };
 
@@ -29,10 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${sourceSerif.variable} ${jetbrainsMono.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex">
-        <Sidebar />
-        <div className="min-w-0 flex-1">{children}</div>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

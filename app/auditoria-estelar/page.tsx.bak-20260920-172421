@@ -1,0 +1,155 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import Link from "next/link";
+import { LightCurveUploader } from "@/components/LightCurveUploader";
+import { FetchByKic } from "@/components/FetchByKic";
+import { LightCurveChart } from "@/components/LightCurveChart";
+import { StellarAuditResults } from "@/components/StellarAuditResults";
+import { useStellarAudit } from "@/hooks/useStellarAudit";
+import { exportStellarAuditReportPdf } from "@/lib/audit/exportStellarAuditReport";
+import type { FluxDataPoint } from "@/types/photometry";
+
+type DataSource = "csv" | "kic";
+
+export default function AuditoriaEstelarPage() {
+  const [dataSource, setDataSource] = useState<DataSource>("csv");
+  const [dataPoints, setDataPoints] = useState<FluxDataPoint[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const audit = useStellarAudit();
+
+  const handleDataLoaded = useCallback((points: FluxDataPoint[], name: string) => {
+    setDataPoints(points);
+    setFileName(name);
+  }, []);
+
+  const handleRunAudit = useCallback(() => {
+    void audit.runAudit(dataPoints);
+  }, [audit, dataPoints]);
+
+  const canRunAudit = dataPoints.length > 0 && !audit.isProcessing;
+  const canDownloadPdf = audit.verdicts.length > 0 && !audit.isProcessing;
+
+  const handleDownloadPdf = useCallback(() => {
+    exportStellarAuditReportPdf(audit.verdicts, fileName);
+  }, [audit.verdicts, fileName]);
+
+  const sourceTabClass = (isActive: boolean) =>
+    `rounded-sm px-3 py-1.5 text-sm transition-colors ${
+      isActive ? "bg-surface-raised text-ink" : "border border-line text-ink-muted hover:text-ink"
+    }`;
+
+  return (
+    <main className="min-h-screen bg-void text-ink">
+      <div className="mx-auto w-full max-w-[1600px] px-8 py-8 lg:px-12">
+        <header className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-2xl font-bold tracking-tight text-ink">
+              Auditoría Estelar
+            </h1>
+            <p className="mt-1 text-base text-ink-muted">
+              Detección y validación explicable de llamaradas estelares — separación de eventos reales frente a artefactos instrumentales y modulación rotacional
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            ← Vetting de tránsitos
+          </Link>
+        </header>
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_400px]">
+          <div className="flex flex-col gap-5 min-w-0">
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
+                Fuente de datos
+              </p>
+              <div className="mb-4 flex gap-2">
+                <button onClick={() => setDataSource("csv")} className={sourceTabClass(dataSource === "csv")}>
+                  CSV manual
+                </button>
+                <button onClick={() => setDataSource("kic")} className={sourceTabClass(dataSource === "kic")}>
+                  Descargar por KIC
+                </button>
+              </div>
+
+              {dataSource === "csv" && <LightCurveUploader onDataLoaded={handleDataLoaded} />}
+              {dataSource === "kic" && <FetchByKic onDataFetched={handleDataLoaded} />}
+
+              {fileName ? (
+                <p className="mt-3 text-sm text-ink-muted">
+                  {fileName} - {dataPoints.length.toLocaleString()} puntos cargados
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-ink-muted">
+                  Ningún dato cargado todavía - elige una fuente arriba para empezar.
+                </p>
+              )}
+            </section>
+
+            <LightCurveChart points={dataPoints} />
+
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-base font-medium text-ink">
+                  Detección de eventos candidatos
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={!canDownloadPdf}
+                    className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    Descargar PDF
+                  </button>
+                  <button
+                    onClick={handleRunAudit}
+                    disabled={!canRunAudit}
+                    className="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-void transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    {audit.isProcessing ? "Procesando..." : "Ejecutar auditoría"}
+                  </button>
+                </div>
+              </div>
+              <p className="mb-4 text-xs text-ink-muted">
+                3 de 6 criterios completos: Morfología FRED, Periodicidad vs.
+                Estocasticidad, Estabilidad de Línea Base. Los Criterios 2, 3
+                y 6 quedan diferidos por ahora (ver documentación del
+                proyecto).
+              </p>
+              <StellarAuditResults
+                verdicts={audit.verdicts}
+                isProcessing={audit.isProcessing}
+                error={audit.error}
+              />
+            </section>
+          </div>
+
+          <div className="flex flex-col gap-5 min-w-0">
+            <section className="rounded-sm border border-line bg-surface p-5">
+              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
+                Sobre este módulo
+              </p>
+              <p className="text-sm text-ink-muted">
+                Esta herramienta busca picos de brillo anómalos en la curva
+                de luz y evalúa cada uno contra firmas físicas reales de
+                llamaradas estelares — no solo si hubo &quot;algo raro&quot;,
+                sino si esa forma es consistente con una llamarada real o más
+                bien con un artefacto instrumental o la rotación normal de la
+                estrella.
+              </p>
+              <p className="mt-3 text-sm text-ink-muted">
+                Los pesos de los criterios son provisionales (aún no existe
+                un catálogo propio de llamaradas etiquetadas para
+                calibrarlos empíricamente, a diferencia del motor de
+                tránsitos).
+              </p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

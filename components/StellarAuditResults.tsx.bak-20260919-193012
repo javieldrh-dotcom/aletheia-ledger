@@ -1,0 +1,135 @@
+"use client";
+
+import type { StellarAuditVerdict } from "@/types/stellarActivity";
+
+interface StellarAuditResultsProps {
+  verdicts: readonly StellarAuditVerdict[];
+  isProcessing: boolean;
+  error: string | null;
+}
+
+/**
+ * Muestra el resultado de la Auditoria Estelar: un evento candidato a
+ * llamarada por bloque, con su veredicto agregado y el detalle de cada
+ * criterio -- SIEMPRE con la explicacion de que mide (campo `explanation`)
+ * y la interpretacion especifica del resultado obtenido (campo
+ * `interpretation`), no solo un numero y un pass/fail. Este es el mismo
+ * principio pedagogico ya aplicado en VettingResults para el motor de
+ * transitos, extendido al modulo de Auditoria Estelar.
+ */
+export function StellarAuditResults({
+  verdicts,
+  isProcessing,
+  error,
+}: StellarAuditResultsProps) {
+  if (isProcessing) {
+    return (
+      <p className="text-sm text-ink-muted">Analizando curva de luz...</p>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="text-sm text-red-400">{error}</p>
+    );
+  }
+
+  if (verdicts.length === 0) {
+    return (
+      <p className="text-sm text-ink-muted">
+        Sin resultados todavia -- carga una curva de luz y ejecuta la
+        auditoria, o no se detectaron eventos candidatos a llamarada en los
+        datos cargados (umbral: 4σ sobre la línea base local).
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-ink-muted">
+        {verdicts.length} evento{verdicts.length !== 1 ? "s" : ""} candidato
+        {verdicts.length !== 1 ? "s" : ""} detectado
+        {verdicts.length !== 1 ? "s" : ""}
+      </p>
+
+      {verdicts.map((verdict, idx) => (
+        <StellarAuditEventCard key={idx} verdict={verdict} index={idx} />
+      ))}
+    </div>
+  );
+}
+
+function StellarAuditEventCard({
+  verdict,
+  index,
+}: {
+  verdict: StellarAuditVerdict;
+  index: number;
+}) {
+  const { event, criteria, confidenceScore, isLikelyArtifact, isInconclusive } =
+    verdict;
+
+  const statusLabel = isInconclusive
+    ? "No concluyente"
+    : isLikelyArtifact
+    ? "Probable artefacto"
+    : "Llamarada real probable";
+
+  const statusColor = isInconclusive
+    ? "text-ink-muted"
+    : isLikelyArtifact
+    ? "text-red-400"
+    : "text-emerald-400";
+
+  return (
+    <div className="rounded-sm border border-line bg-surface-raised p-4">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-muted">
+            Evento {index + 1} · t = {event.peakTime.toFixed(4)}
+          </p>
+          <p className={`mt-1 text-base font-medium ${statusColor}`}>
+            {statusLabel} — {(confidenceScore * 100).toFixed(0)}% de confianza
+          </p>
+        </div>
+        <div className="text-right text-xs text-ink-muted">
+          <p>Amplitud: {(event.amplitude * 100).toFixed(2)}%</p>
+          <p>Duración: {event.durationDays.toFixed(3)} días</p>
+          <p>Significancia: {event.peakSignificance.toFixed(1)}σ</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {criteria.map((criterion) => (
+          <div
+            key={criterion.name}
+            className="rounded-sm border border-line bg-surface p-3"
+          >
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-ink">
+                {criterion.displayName}
+              </p>
+              <span
+                className={`rounded-sm px-2 py-0.5 text-xs font-medium ${
+                  criterion.passed
+                    ? "bg-emerald-950 text-emerald-400"
+                    : "bg-red-950 text-red-400"
+                }`}
+              >
+                {criterion.passed ? "PASA" : "NO PASA"}
+              </span>
+            </div>
+            <p className="mb-1 text-xs text-ink-muted">
+              {criterion.explanation}
+            </p>
+            <p className="text-xs text-ink">{criterion.interpretation}</p>
+            <p className="mt-1 font-mono text-[10px] text-ink-muted">
+              medido = {criterion.measuredValue} · umbral = {criterion.threshold}{" "}
+              · peso = {(criterion.weight * 100).toFixed(0)}%
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

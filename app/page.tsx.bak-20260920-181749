@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { LightCurveUploader } from "@/components/LightCurveUploader";
 import { NasaTargetSearch } from "@/components/NasaTargetSearch";
 import { FetchByKic } from "@/components/FetchByKic";
 import type { NasaTargetResult } from "@/lib/nasa/exoplanetArchive";
-import { LightCurveChart, type TransitWindow } from "@/components/LightCurveChart";
+import { LightCurveChart } from "@/components/LightCurveChart";
 import { VettingResults } from "@/components/VettingResults";
 import { ProvenanceChain } from "@/components/ProvenanceChain";
 import { SignaturePanel } from "@/components/SignaturePanel";
@@ -102,53 +102,6 @@ export default function Home() {
 
   const criteriaLabel = mode === "periodic" ? "6 criterios de transito periodico" : "Criterios de transito unico";
 
-  // Ventana de transito a resaltar sobre el grafico -- SOLO se calcula
-  // cuando el usuario ya ingreso parametros de transito validos (nunca
-  // se inventa una ventana sin datos reales detras). En modo periodico
-  // se calculan todas las ocurrencias del transito que caen dentro del
-  // rango de tiempo de los datos cargados; en modo de transito unico,
-  // una sola ventana centrada en el tiempo indicado.
-  const transitWindows = useMemo<TransitWindow[]>(() => {
-    if (dataPoints.length === 0) return [];
-    const minTime = dataPoints[0].time;
-    const maxTime = dataPoints[dataPoints.length - 1].time;
-
-    if (mode === "periodic") {
-      const period = Number(periodDays);
-      const epoch = Number(epochBjd);
-      const duration = Number(durationHours);
-      if (
-        Number.isNaN(period) || period <= 0 ||
-        Number.isNaN(epoch) ||
-        Number.isNaN(duration) || duration <= 0
-      ) {
-        return [];
-      }
-      const halfWidthDays = duration / 24 / 2;
-      const firstN = Math.floor((minTime - epoch) / period) - 1;
-      const lastN = Math.ceil((maxTime - epoch) / period) + 1;
-      const windows: TransitWindow[] = [];
-      for (let n = firstN; n <= lastN; n++) {
-        const center = epoch + n * period;
-        const startTime = center - halfWidthDays;
-        const endTime = center + halfWidthDays;
-        if (endTime >= minTime && startTime <= maxTime) {
-          windows.push({ startTime, endTime });
-        }
-      }
-      return windows;
-    }
-
-    const mid = Number(midTransitBjd);
-    const duration = Number(singleDurationHours);
-    if (Number.isNaN(mid) || Number.isNaN(duration) || duration <= 0) return [];
-    const halfWidthDays = duration / 24 / 2;
-    const startTime = mid - halfWidthDays;
-    const endTime = mid + halfWidthDays;
-    if (endTime < minTime || startTime > maxTime) return [];
-    return [{ startTime, endTime }];
-  }, [dataPoints, mode, periodDays, epochBjd, durationHours, midTransitBjd, singleDurationHours]);
-
   const inputClass =
     "w-full rounded-sm border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none";
 
@@ -225,7 +178,7 @@ export default function Home() {
             </section>
 
             <div className="glow-accent overflow-hidden rounded-sm border border-accent/20">
-              <LightCurveChart points={dataPoints} transitWindows={transitWindows} />
+              <LightCurveChart points={dataPoints} />
             </div>
 
             <section className="rounded-sm border border-line bg-surface p-5">
@@ -307,74 +260,9 @@ export default function Home() {
                 <CaseStudyGallery onSelectCase={handleCaseSelected} />
               </CollapsibleSection>
             </ToolsMenu>
-
-            <KindleCollectionCard />
           </div>
         </div>
       </div>
     </main>
-  );
-}
-
-/**
- * Tarjeta que conecta al visitante con la coleccion de libros "Aletheia
- * Ledger" en Kindle -- unico pilar comercial real de la plataforma por
- * ahora. La "portada" es dibujada en CSS (no una foto), igual que en el
- * mockup de referencia -- evita depender de un archivo de imagen. Los
- * dos enlaces (ingles y español) son reales y verificados, tomados de
- * las paginas de venta reales de cada edicion en Amazon.
- */
-function KindleCollectionCard() {
-  const englishBookUrl = "https://www.amazon.com/dp/B0HJZXN64Z";
-  const spanishBookUrl = "https://www.amazon.com/dp/B0HK14R9PD";
-
-  return (
-    <section className="rounded-sm border border-line bg-surface p-5">
-      <p className="mb-4 font-mono text-xs uppercase tracking-wide text-ink-muted">
-        La colección Aletheia Ledger
-      </p>
-
-      <div className="mb-4 flex items-center gap-4 rounded-sm border border-accent/30 bg-void p-4">
-        <div className="flex h-20 w-14 shrink-0 flex-col justify-between rounded-sm border border-accent/40 bg-gradient-to-b from-surface-raised to-void p-2">
-          <span className="font-mono text-[9px] uppercase tracking-wide text-accent">
-            Tomo 1
-          </span>
-          <span className="font-serif text-xs font-bold leading-tight text-ink">
-            Exoplanetas
-          </span>
-          <span className="font-mono text-[8px] uppercase tracking-wide text-ink-muted">
-            Disponible ahora
-          </span>
-        </div>
-        <div>
-          <p className="font-serif text-lg font-bold text-ink">
-            Exoplanetas
-          </p>
-          <p className="text-sm text-ink-muted">
-            Cómo separar un mundo real de un falso positivo — el método,
-            explicado sin fórmulas.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <a
-          href={spanishBookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-sm bg-accent px-4 py-2.5 text-center text-sm font-medium text-void transition-opacity hover:opacity-90"
-        >
-          Kindle (ES) — $2.99
-        </a>
-        <a
-          href={englishBookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-sm border border-accent px-4 py-2.5 text-center text-sm font-medium text-accent transition-opacity hover:opacity-90"
-        >
-          Kindle (EN) — $2.99
-        </a>
-      </div>
-    </section>
   );
 }

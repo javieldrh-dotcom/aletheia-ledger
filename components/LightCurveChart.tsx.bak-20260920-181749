@@ -5,32 +5,17 @@ import {
   Brush,
   CartesianGrid,
   Cell,
-  ComposedChart,
-  Line,
-  ReferenceArea,
   ResponsiveContainer,
   Scatter,
+  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import type { DataQualityFlag, FluxDataPoint } from "@/types/photometry";
 
-/**
- * Ventana de transito a resaltar sobre el grafico (banda semitransparente
- * + linea de contorno, al estilo del mockup de referencia). Opcional:
- * solo se calcula y se pasa cuando hay parametros de transito validos
- * (periodo/epoca/duracion, o un transito unico) -- nunca se inventa una
- * ventana sin datos reales detras.
- */
-export interface TransitWindow {
-  startTime: number;
-  endTime: number;
-}
-
 interface LightCurveChartProps {
   points: readonly FluxDataPoint[];
-  transitWindows?: readonly TransitWindow[];
 }
 
 // NOTA (2026-09-20): Recharts dibuja SVG directo -- estos props (fill,
@@ -106,7 +91,7 @@ function downsampleForDisplay(
   return points.filter((_, index) => index % step === 0);
 }
 
-export function LightCurveChart({ points, transitWindows }: LightCurveChartProps) {
+export function LightCurveChart({ points }: LightCurveChartProps) {
   const displayPoints = useMemo(
     () => downsampleForDisplay(points, MAX_CHART_POINTS),
     [points]
@@ -147,18 +132,7 @@ export function LightCurveChart({ points, transitWindows }: LightCurveChartProps
       </div>
 
       <ResponsiveContainer width="100%" height={420}>
-        {/*
-         * CAMBIO (2026-09-20): se paso de ScatterChart a ComposedChart
-         * para poder superponer una linea de tendencia sutil bajo los
-         * puntos reales, y una banda de "ventana de transito" cuando hay
-         * parametros de transito validos -- acercando la presentacion al
-         * mockup de referencia sin dejar de mostrar los datos reales
-         * (los puntos dispersos siguen siendo la fuente de verdad; la
-         * linea es solo una ayuda visual de tendencia, y la banda solo
-         * aparece cuando el usuario ya ingreso parametros de transito
-         * reales, nunca inventada).
-         */}
-        <ComposedChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+        <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
           <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
           <XAxis
             dataKey="time"
@@ -189,38 +163,6 @@ export function LightCurveChart({ points, transitWindows }: LightCurveChartProps
             }}
           />
           <Tooltip content={<CustomTooltip />} />
-
-          {transitWindows?.map((window, index) => (
-            <ReferenceArea
-              key={`${window.startTime}-${window.endTime}-${index}`}
-              x1={window.startTime}
-              x2={window.endTime}
-              fill="#06b6d4"
-              fillOpacity={0.12}
-              stroke="#06b6d4"
-              strokeOpacity={0.4}
-              ifOverflow="hidden"
-              label={{
-                value: "Ventana de tránsito",
-                position: "insideTop",
-                fill: "#06b6d4",
-                fontSize: 11,
-              }}
-            />
-          ))}
-
-          <Line
-            data={chartData}
-            type="monotone"
-            dataKey="flux"
-            stroke="#06b6d4"
-            strokeOpacity={0.3}
-            strokeWidth={1.5}
-            dot={false}
-            isAnimationActive={false}
-            connectNulls
-          />
-
           {/*
            * CORRECCION (2026-09-20): el prop "fill" del propio <Scatter>
            * solo sirve como color por defecto -- Recharts NO lee el
@@ -246,7 +188,7 @@ export function LightCurveChart({ points, transitWindows }: LightCurveChartProps
             fill="#18181b"
             travellerWidth={8}
           />
-        </ComposedChart>
+        </ScatterChart>
       </ResponsiveContainer>
     </div>
   );

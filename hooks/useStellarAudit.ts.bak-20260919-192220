@@ -1,0 +1,142 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import type { StellarAuditVerdict } from "@/types/stellarActivity";
+import type { FluxDataPoint } from "@/types/photometry";
+import { detectFlareEvents } from "@/lib/audit/detectFlareEvents";
+import { evaluateFlareMorphology } from "@/lib/audit/flareCriteria";
+import { evaluatePeriodicityVsStochasticity } from "@/lib/audit/periodicityCriteria";
+import { evaluateBaselineStability } from "@/lib/audit/baselineStabilityCriteria";
+
+const ALGORITHM_VERSION = "aletheia-stellar-audit-v0.1.0";
+
+interface UseStellarAuditResult {
+  verdicts: readonly StellarAuditVerdict[];
+  isProcessing: boolean;
+  error: string | null;
+  runAudit: (points: readonly FluxDataPoint[]) => Promise<void>;
+}
+
+/**
+ * Hook de agregacion del modulo de Auditoria Estelar (analogo a
+ * useLightCurveFilter para el motor de vetting de transitos): detecta
+ * eventos candidatos a llamarada en una curva de luz y evalua cada uno
+ * contra los 3 criterios completos hasta ahora.
+ *
+ * ESTADO HONESTO (2026-09-19, v0.1.0): solo 3 de los 6 criterios
+ * disenados estan implementados --
+ *   1) Morfologia FRED (subida rapida, bajada exponencial)
+ *   4) Periodicidad vs. Estocasticidad (Lomb-Scargle)
+ *   5) Estabilidad de Linea Base
+ * Los criterios 2 (amplitud-duracion vs. catalogo), 3 (corroboracion
+ * multi-cadencia/apertura) y 6 (veto cruzado de instrumentos) quedan
+ * diferidos: el 2 porque no existe una relacion citable verificada para
+ * usar (se rechazaron coeficientes no verificables en esta misma
+ * sesion), y el 3 y 6 porque requieren una fuente de datos adicional
+ * (otra apertura, otra cadencia, u otro instrumento para el mismo
+ * objetivo) que la plataforma todavia no descarga.
+ *
+ * PESOS: a diferencia del motor de vetting de transitos (calibrado
+ * empiricamente sobre 252 candidatos reales), todavia NO existe un
+ * catalogo propio de llamaradas reales/artefactos etiquetados para
+ * medir el poder discriminativo real de cada criterio. Los pesos de
+ * abajo son un reparto razonado pero PROVISIONAL, no calibrado:
+ *   - Morfologia FRED (0.40): la firma fisica mas especifica y mas
+ *     citada en la literatura -- el criterio individual mas fuerte.
+ *   - Periodicidad vs. Estocasticidad (0.35): ataca directamente la
+ *     fuente de confusion mas comun (modulacion rotacional confundida
+ *     con llamarada), validado sinteticamente con separacion clara
+ *     (48.6 sigma vs. 1.5 sigma, ver test_periodicity.ts).
+ *   - Estabilidad de Linea Base (0.25): buen detector de artefactos
+ *     instrumentales evidentes, pero menos especifico por si solo.
+ * Estos pesos deben revisarse en cuanto exista un catalogo real de
+ * llamaradas para recalibrar con el mismo metodo empirico usado en
+ * scripts/recalibrate_v3.py.
+ */
+const fredWeight = 0.4;
+const periodicityWeight = 0.35;
+const baselineWeight = 0.25;
+
+export function useStellarAudit(): UseStellarAuditResult {
+  const [verdicts, setVerdicts] = useState<readonly StellarAuditVerdict[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const runAudit = useCallback(async (points: readonly FluxDataPoint[]) => {
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const cleanPoints = points.filter(
+        (p) => Number.isFinite(p.flux) && Number.isFinite(p.time)
+      );
+
+      if (cleanPoints.length < 10) {
+        throw new Error(
+          "Se requieren al menos 10 puntos de datos limpios para la auditoría estelar."
+        );
+      }
+
+      const events = detectFlareEvents(cleanPoints);
+
+      const newVerdicts: StellarAuditVerdict[] = events.map((event) => {
+        const fred = { ...evaluateFlareMorphology(event, cleanPoints), weight: fredWeight };
+        const periodicity = {
+          ...evaluatePeriodicityVsStochasticity(event, cleanPoints),
+          weight: periodicityWeight,
+        };
+        const baseline = {
+          ...evaluateBaselineStability(event, cleanPoints),
+          weight: baselineWeight,
+        };
+
+        const criteria = [fred, periodicity, baseline];
+
+        const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
+        const confidenceScore =
+          criteria.reduce((sum, c) => sum + (c.passed ? c.weight : 0), 0) /
+          totalWeight;
+
+        // Veto por evidencia extrema: un salto de linea base varias veces
+        // por encima del umbral es evidencia practicamente irrefutable de
+        // un artefacto instrumental (mismo principio que el veto por
+        // eclipse secundario en el motor de transitos) -- no deberia
+        // poder ser "promediado" por los otros criterios.
+        const vetoedByBaselineStep =
+          !baseline.passed && baseline.measuredValue > baseline.threshold * 3;
+
+        const isLikelyArtifact = vetoedByBaselineStep || confidenceScore < 0.5;
+
+        // Senal provisional de "no concluyente": basada en el texto de
+        // interpretacion de cada criterio cuando no hay suficientes
+        // puntos para calcular con confianza (ver periodicityCriteria.ts
+        // y baselineStabilityCriteria.ts). Esto es un sustituto temporal
+        // -- lo correcto a mediano plazo es anadir un campo formal
+        // `inconclusive` a AuditCriterion, no inferirlo de texto.
+        const isInconclusive = criteria.some((c) =>
+          c.interpretation.includes("sin resultado concluyente")
+        );
+
+        return {
+          event,
+          criteria,
+          confidenceScore,
+          isLikelyArtifact,
+          isInconclusive,
+          algorithmVersion: ALGORITHM_VERSION,
+          evaluatedAt: Date.now(),
+        };
+      });
+
+      setVerdicts(newVerdicts);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error desconocido en la auditoría estelar."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  return { verdicts, isProcessing, error, runAudit };
+}

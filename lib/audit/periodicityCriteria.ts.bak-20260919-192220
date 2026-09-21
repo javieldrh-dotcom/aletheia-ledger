@@ -1,0 +1,125 @@
+import type { AuditCriterion, FlareEvent } from "@/types/stellarActivity";
+import type { FluxDataPoint } from "@/types/photometry";
+import { findDominantPeriod, evaluatePeriodicModel } from "./lombScargle";
+
+/**
+ * Criterio 4 de Auditoria Estelar: Periodicidad vs. Estocasticidad.
+ *
+ * Fundamento fisico: las manchas estelares rotan junto con la estrella,
+ * produciendo una modulacion de brillo PERIODICA y PREDECIBLE (el mismo
+ * patron se repite cada periodo de rotacion). Una llamarada real, en
+ * cambio, es un evento ESTOCASTICO: ocurre en un instante impredecible,
+ * sin relacion con la fase de rotacion.
+ *
+ * Esto importa porque un pico de brillo detectado por detectFlareEvents
+ * podria en realidad ser solo el momento en que la modulacion rotacional
+ * (manchas saliendo de vista, cara mas brillante de la estrella) alcanza
+ * su maximo -- no una llamarada real. Este criterio lo distingue:
+ *
+ *   1. Se ajusta la modulacion periodica dominante de la curva de luz
+ *      (excluyendo el propio evento, para no dejar que la llamarada
+ *      contamine el ajuste) mediante un periodograma de Lomb-Scargle.
+ *   2. Se evalua ese modelo periodico en el instante del pico del evento.
+ *   3. Se mide cuanto EXCEDE el brillo observado en el pico al brillo
+ *      predicho por la modulacion periodica, en unidades de sigma del
+ *      ruido residual (lo que queda despues de restar el modelo
+ *      periodico de toda la curva, fuera del evento).
+ *
+ * Un exceso grande (varios sigma por encima de lo que la rotacion por si
+ * sola explicaria) es evidencia de que el evento es estocastico -- algo
+ * ADEMAS de la modulacion periodica normal de la estrella, consistente
+ * con una llamarada real. Un exceso pequeno sugiere que el "evento" es
+ * solo la fase mas brillante de la rotacion, no una llamarada.
+ */
+
+const EXCESS_SIGMA_THRESHOLD = 4.0;
+const MIN_POINTS_OUTSIDE_EVENT = 30;
+
+function median(values: readonly number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function robustStandardDeviation(values: readonly number[]): number {
+  const med = median(values);
+  const deviations = values.map((v) => Math.abs(v - med));
+  return 1.4826 * median(deviations);
+}
+
+export function evaluatePeriodicityVsStochasticity(
+  event: FlareEvent,
+  points: readonly FluxDataPoint[]
+): AuditCriterion {
+  const explanation =
+    "Las manchas estelares producen brillo que sube y baja de forma periódica al rotar la estrella. Este criterio ajusta ese patrón periódico (excluyendo el propio evento) y mide si el pico observado excede claramente lo que la rotación por sí sola predice — un exceso grande es propio de una llamarada real, no de la rotación normal.";
+
+  // Excluir los puntos del propio evento del ajuste periodico, para que
+  // la llamarada no distorsione el modelo que se usa para juzgarla.
+  const outsidePoints = points.filter(
+    (_, idx) => idx < event.startIndex || idx > event.endIndex
+  );
+
+  if (outsidePoints.length < MIN_POINTS_OUTSIDE_EVENT) {
+    return {
+      name: "periodicity_vs_stochasticity",
+      displayName: "Periodicidad vs. Estocasticidad",
+      measuredValue: 0,
+      threshold: EXCESS_SIGMA_THRESHOLD,
+      weight: 0,
+      passed: false,
+      explanation,
+      interpretation:
+        "No hay suficientes puntos fuera del evento para ajustar de forma confiable la modulación periódica de la estrella — este criterio queda sin resultado concluyente para este evento.",
+    };
+  }
+
+  const times = outsidePoints.map((p) => p.time);
+  const flux = outsidePoints.map((p) => p.flux);
+
+  const timeSpanDays = times[times.length - 1] - times[0];
+  const minPeriodDays = 0.2;
+  const maxPeriodDays = Math.max(minPeriodDays * 2, timeSpanDays / 2);
+
+  const periodogram = findDominantPeriod(
+    times,
+    flux,
+    minPeriodDays,
+    maxPeriodDays
+  );
+
+  // Residuos fuera del evento tras restar el modelo periodico: estimador
+  // del ruido "normal" de la curva una vez removida la modulacion.
+  const residuals = outsidePoints.map(
+    (p) => p.flux - evaluatePeriodicModel(periodogram, p.time)
+  );
+  const residualNoise = robustStandardDeviation(residuals);
+
+  const predictedAtPeak = evaluatePeriodicModel(periodogram, event.peakTime);
+  const excess = event.peakFlux - predictedAtPeak;
+  const excessSigma = residualNoise > 0 ? excess / residualNoise : 0;
+
+  const passed = excessSigma >= EXCESS_SIGMA_THRESHOLD;
+
+  const periodNote =
+    periodogram.bestPeriodDays > 0
+      ? `período dominante detectado: ${periodogram.bestPeriodDays.toFixed(2)} días`
+      : "no se detectó una modulación periódica dominante clara";
+
+  const interpretation = passed
+    ? `El pico excede en ${excessSigma.toFixed(1)}σ lo que la modulación periódica de la estrella predice para ese instante (${periodNote}) — el evento es estocástico, consistente con una llamarada real y no con la rotación normal.`
+    : `El pico excede solo ${excessSigma.toFixed(1)}σ lo esperado por la modulación periódica (${periodNote}, se esperaba ≥${EXCESS_SIGMA_THRESHOLD}σ) — es compatible con ser simplemente la fase más brillante de la rotación de la estrella, no necesariamente una llamarada distinta.`;
+
+  return {
+    name: "periodicity_vs_stochasticity",
+    displayName: "Periodicidad vs. Estocasticidad",
+    measuredValue: Math.round(excessSigma * 100) / 100,
+    threshold: EXCESS_SIGMA_THRESHOLD,
+    weight: 0, // se asigna en el hook de agregacion, no aqui
+    passed,
+    explanation,
+    interpretation,
+  };
+}
