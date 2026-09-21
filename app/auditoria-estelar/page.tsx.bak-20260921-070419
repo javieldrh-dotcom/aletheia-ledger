@@ -5,7 +5,6 @@ import { LightCurveUploader } from "@/components/LightCurveUploader";
 import { FetchByKic } from "@/components/FetchByKic";
 import { LightCurveChart } from "@/components/LightCurveChart";
 import { StellarAuditResults } from "@/components/StellarAuditResults";
-import { CaseStudyGallery } from "@/components/CaseStudyGallery";
 import { useStellarAudit } from "@/hooks/useStellarAudit";
 import { exportStellarAuditReportPdf } from "@/lib/audit/exportStellarAuditReport";
 import type { FluxDataPoint } from "@/types/photometry";
@@ -23,19 +22,6 @@ export default function AuditoriaEstelarPage() {
     setDataPoints(points);
     setFileName(name);
   }, []);
-
-  // La galeria comparte las mismas 253 curvas reales de Kepler que usa
-  // Vetting de Transitos -- son datos fotometricos crudos, sirven igual
-  // para buscar llamaradas. Los parametros de transito que devuelve el
-  // callback (periodo/epoca/duracion) no aplican aqui y se ignoran
-  // deliberadamente: la Auditoria Estelar no los usa para nada.
-  const handleCaseSelected = useCallback(
-    (points: FluxDataPoint[], name: string) => {
-      setDataPoints(points);
-      setFileName(name);
-    },
-    []
-  );
 
   const handleRunAudit = useCallback(() => {
     void audit.runAudit(dataPoints);
@@ -153,13 +139,6 @@ export default function AuditoriaEstelarPage() {
                 calibrarlos empíricamente, a diferencia del motor de
                 tránsitos).
               </p>
-            </section>
-
-            <section className="rounded-sm border border-line bg-surface p-5">
-              <p className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-muted">
-                Galería de casos
-              </p>
-              <CaseStudyGallery onSelectCase={handleCaseSelected} />
             </section>
           </div>
         </div>

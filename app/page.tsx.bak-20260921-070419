@@ -303,7 +303,7 @@ export default function Home() {
             </section>
 
             <ToolsMenu>
-              <CollapsibleSection title="Galeria de casos" badge="253+">
+              <CollapsibleSection title="Galeria de casos" badge="30+">
                 <CaseStudyGallery onSelectCase={handleCaseSelected} />
               </CollapsibleSection>
             </ToolsMenu>
